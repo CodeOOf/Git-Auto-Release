@@ -1,0 +1,629 @@
+name: CI/CD Pipeline with Semantic Versioning
+
+on:
+  push:
+    branches:
+      - '**'  # All branches
+  pull_request:
+    branches:
+      - main
+      - alpha
+      - release
+
+jobs:
+  # Calculate version based on branch and commit
+  version:
+    name: Calculate Version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.semver.outputs.version }}
+      tag: ${{ steps.semver.outputs.tag }}
+      is_release: ${{ steps.semver.outputs.is_release }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for version calculation
+      
+      - name: Read base version
+        id: base_version
+        run: |
+          if [ -f VERSION ]; then
+            echo "version=$(cat VERSION)" >> $GITHUB_OUTPUT
+          else
+            echo "version=0.1.0" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Calculate semantic version
+        id: semver
+        run: |
+          BASE_VERSION="${{ steps.base_version.outputs.version }}"
+          BRANCH_NAME="${{ github.ref_name }}"
+          SHORT_SHA="${GITHUB_SHA:0:8}"
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          PR_SOURCE="${{ github.event.pull_request.head.ref }}"
+          PR_TARGET="${{ github.event.pull_request.base.ref }}"
+          
+          # Extract version components (handle pre-release suffixes like -alpha, -beta, -rc)
+          # Remove any suffix after - or + to get base X.Y.Z
+          CLEAN_VERSION="${BASE_VERSION%%-*}"
+          CLEAN_VERSION="${CLEAN_VERSION%%+*}"
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CLEAN_VERSION"
+          
+          # Extract pre-release suffix if exists (e.g., -alpha, -beta, -rc)
+          if [[ "$BASE_VERSION" =~ -([a-zA-Z]+) ]]; then
+            BASE_SUFFIX="-${BASH_REMATCH[1]}"
+          else
+            BASE_SUFFIX=""
+          fi
+          
+          # Determine version based on branch strategy and PR context
+          case "$BRANCH_NAME" in
+            release)
+              if [ "${{ github.event_name }}" = "pull_request" ]; then
+                # PR to release: vX.Y.Z-rc.N (release candidate)
+                RC_COUNT=$(git tag -l "v${MAJOR}.${MINOR}.${PATCH}-rc.*" | wc -l)
+                RC_NUM=$((RC_COUNT + 1))
+                VERSION="${MAJOR}.${MINOR}.${PATCH}-rc.${RC_NUM}"
+                TAG=""
+                IS_RELEASE="false"
+              else
+                # Push to release after PR merge: Clean version
+                VERSION="${MAJOR}.${MINOR}.${PATCH}"
+                TAG="v${VERSION}"
+                IS_RELEASE="true"
+              fi
+              ;;
+            main)
+              if [ "${{ github.event_name }}" = "pull_request" ]; then
+                # PR to main: Calculate version for validation
+                case "$PR_SOURCE" in
+                  alpha)
+                    # Merge from alpha = MAJOR bump
+                    NEXT_MAJOR=$((MAJOR + 1))
+                    VERSION="${NEXT_MAJOR}.0.0-alpha"
+                    ;;
+                  feature/*)
+                    # Merge from feature = MINOR bump
+                    NEXT_MINOR=$((MINOR + 1))
+                    VERSION="${MAJOR}.${NEXT_MINOR}.0-beta"
+                    ;;
+                  bugfix/*)
+                    # Merge from bugfix during beta = increment build metadata
+                    # Check if current version has -beta or -alpha suffix
+                    if [[ "$BASE_VERSION" =~ -beta ]]; then
+                      # Extract existing build number if present
+                      if [[ "$BASE_VERSION" =~ \.([0-9]+)$ ]]; then
+                        CURRENT_BUILD="${BASH_REMATCH[1]}"
+                        NEXT_BUILD=$((CURRENT_BUILD + 1))
+                      else
+                        NEXT_BUILD="1"
+                      fi
+                      VERSION="${MAJOR}.${MINOR}.${PATCH}-beta.${NEXT_BUILD}"
+                    elif [[ "$BASE_VERSION" =~ -alpha ]]; then
+                      # Extract existing build number if present
+                      if [[ "$BASE_VERSION" =~ \.([0-9]+)$ ]]; then
+                        CURRENT_BUILD="${BASH_REMATCH[1]}"
+                        NEXT_BUILD=$((CURRENT_BUILD + 1))
+                      else
+                        NEXT_BUILD="1"
+                      fi
+                      VERSION="${MAJOR}.${MINOR}.${PATCH}-alpha.${NEXT_BUILD}"
+                    else
+                      # Not in beta/alpha phase, do PATCH bump
+                      NEXT_PATCH=$((PATCH + 1))
+                      VERSION="${MAJOR}.${MINOR}.${NEXT_PATCH}-beta"
+                    fi
+                    ;;
+                  beta)
+                    # Merge from beta (already has bumped MAJOR version)
+                    VERSION="${MAJOR}.${MINOR}.${PATCH}-beta"
+                    ;;
+                  *)
+                    # Default
+                    VERSION="${MAJOR}.${MINOR}.${PATCH}-beta"
+                    ;;
+                esac
+                TAG=""
+                IS_RELEASE="false"
+              else
+                # Push to main after PR merge: Detect bump from commit message or last PR
+                # Check last merged PR to determine version
+                LAST_PR_BRANCH=$(git log -1 --pretty=%B | grep -oP '(?<=from ).*(?=/)' || echo "")
+                case "$LAST_PR_BRANCH" in
+                  alpha)
+                    # Merged from alpha = MAJOR bump automatically
+                    NEXT_MAJOR=$((MAJOR + 1))
+                    VERSION="${NEXT_MAJOR}.0.0-alpha"
+                    TAG="v${VERSION}"
+                    ;;
+                  feature)
+                    # Merged from feature = MINOR bump
+                    NEXT_MINOR=$((MINOR + 1))
+                    VERSION="${MAJOR}.${NEXT_MINOR}.0-beta"
+                    TAG="v${VERSION}"
+                    ;;
+                  bugfix)
+                    # Merged from bugfix during beta = increment build metadata
+                    if [[ "$BASE_VERSION" =~ -beta ]]; then
+                      # Extract existing build number if present
+                      if [[ "$BASE_VERSION" =~ \.([0-9]+)$ ]]; then
+                        CURRENT_BUILD="${BASH_REMATCH[1]}"
+                        NEXT_BUILD=$((CURRENT_BUILD + 1))
+                      else
+                        NEXT_BUILD="1"
+                      fi
+                      VERSION="${MAJOR}.${MINOR}.${PATCH}-beta.${NEXT_BUILD}"
+                      TAG="v${VERSION}"
+                    elif [[ "$BASE_VERSION" =~ -alpha ]]; then
+                      # Extract existing build number if present
+                      if [[ "$BASE_VERSION" =~ \.([0-9]+)$ ]]; then
+                        CURRENT_BUILD="${BASH_REMATCH[1]}"
+                        NEXT_BUILD=$((CURRENT_BUILD + 1))
+                      else
+                        NEXT_BUILD="1"
+                      fi
+                      VERSION="${MAJOR}.${MINOR}.${PATCH}-alpha.${NEXT_BUILD}"
+                      TAG="v${VERSION}"
+                    else
+                      # Not in beta/alpha phase, do PATCH bump
+                      NEXT_PATCH=$((PATCH + 1))
+                      VERSION="${MAJOR}.${MINOR}.${NEXT_PATCH}-beta"
+                      TAG="v${VERSION}"
+                    fi
+                    ;;
+                  beta)
+                    # Merged from beta (already bumped major version in alpha merge)
+                    # Just add -beta suffix to current version
+                    VERSION="${MAJOR}.${MINOR}.${PATCH}-beta"
+                    TAG="v${VERSION}"
+                    ;;
+                  *)
+                    # Default
+                    VERSION="${MAJOR}.${MINOR}.${PATCH}-beta"
+                    TAG="v${VERSION}"
+                    ;;
+                esac
+                IS_RELEASE="false"
+              fi
+              ;;
+            alpha)
+              # Alpha branch: vX.Y.Z+SHA (current VERSION from main, before major bump)
+              VERSION="${MAJOR}.${MINOR}.${PATCH}+${SHORT_SHA}"
+              TAG=""
+              IS_RELEASE="false"
+              ;;
+            beta)
+              # Beta branch (created from main after alpha merge): vX.Y.Z-alpha+SHA
+              # VERSION file should already be X.Y.Z-alpha at this point
+              VERSION="${MAJOR}.${MINOR}.${PATCH}-alpha+${SHORT_SHA}"
+              TAG=""
+              IS_RELEASE="false"
+              ;;
+            feature/*)
+              # Feature branch: vX.Y.Z+SHA (current VERSION from main)
+              VERSION="${MAJOR}.${MINOR}.${PATCH}+${SHORT_SHA}"
+              TAG=""
+              IS_RELEASE="false"
+              ;;
+            bugfix/*)
+              if [ "${{ github.event_name }}" = "pull_request" ]; then
+                # PR from bugfix: vX.Y.Z-bugfix.N
+                BUGFIX_COUNT=$(git tag -l "v${MAJOR}.${MINOR}.${PATCH}-bugfix.*" | wc -l)
+                BUGFIX_NUM=$((BUGFIX_COUNT + 1))
+                VERSION="${MAJOR}.${MINOR}.${PATCH}-bugfix.${BUGFIX_NUM}"
+              else
+                # Bugfix branch push: vX.Y.Z+SHA
+                VERSION="${MAJOR}.${MINOR}.${PATCH}+${SHORT_SHA}"
+              fi
+              TAG=""
+              IS_RELEASE="false"
+              ;;
+            hotfix)
+              if [ "${{ github.event_name }}" = "pull_request" ]; then
+                # PR from hotfix to release: vX.Y.Z+1-rc.N (PATCH bump)
+                NEXT_PATCH=$((PATCH + 1))
+                RC_COUNT=$(git tag -l "v${MAJOR}.${MINOR}.${NEXT_PATCH}-rc.*" | wc -l)
+                RC_NUM=$((RC_COUNT + 1))
+                VERSION="${MAJOR}.${MINOR}.${NEXT_PATCH}-rc.${RC_NUM}"
+              else
+                # Hotfix branch push: vX.Y.Z-hotfix.N
+                HOTFIX_COUNT=$(git tag -l "v${MAJOR}.${MINOR}.${PATCH}-hotfix.*" | wc -l)
+                HOTFIX_NUM=$((HOTFIX_COUNT + 1))
+                VERSION="${MAJOR}.${MINOR}.${PATCH}-hotfix.${HOTFIX_NUM}"
+              fi
+              TAG=""
+              IS_RELEASE="false"
+              ;;
+            *)
+              # Other branches: vX.Y.Z+SHA
+              VERSION="${MAJOR}.${MINOR}.${PATCH}+${SHORT_SHA}"
+              TAG=""
+              IS_RELEASE="false"
+              ;;
+          esac
+          
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          echo "is_release=${IS_RELEASE}" >> $GITHUB_OUTPUT
+          
+          echo "📦 Calculated version: ${VERSION}"
+          echo "🏷️  Tag: ${TAG:-none}"
+          echo "🚀 Is release: ${IS_RELEASE}"
+          echo "🔍 PR Source: ${PR_SOURCE:-N/A}"
+          echo "🎯 Branch: ${BRANCH_NAME}"
+
+  # Build and test (runs on all branches except release)
+  build:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    needs: version
+    if: github.ref_name != 'release'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Display version
+        run: |
+          echo "🏗️  Building version: ${{ needs.version.outputs.version }}"
+          echo "📋 This is a template project - customize the build job with your project's commands"
+      
+      - name: Placeholder - Setup your environment
+        run: |
+          echo "Add your environment setup here"
+          # Example for Node.js: 
+          #   uses: actions/setup-node@v4
+          #   with:
+          #     node-version: '20'
+          # Example for Python:
+          #   uses: actions/setup-python@v5
+          #   with:
+          #     python-version: '3.11'
+      
+      - name: Placeholder - Install dependencies
+        run: |
+          echo "Add your dependency installation here"
+          # Example for Node.js: npm ci
+          # Example for Python: pip install -r requirements.txt
+          # Example for Go: go mod download
+      
+      - name: Placeholder - Build
+        run: |
+          echo "Add your build commands here"
+          echo "Version to use: ${{ needs.version.outputs.version }}"
+          # Example for Node.js: npm run build
+          # Example for Python: python setup.py build
+          # Example for Go: go build -ldflags "-X main.Version=${{ needs.version.outputs.version }}"
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+      
+      - name: Placeholder - Run tests
+        run: |
+          echo "Add your test commands here"
+          # Example for Node.js: npm test
+          # Example for Python: pytest
+          # Example for Go: go test ./...
+      
+      - name: Placeholder - Upload artifacts (optional)
+        run: |
+          echo "Optionally upload build artifacts"
+          # Uncomment and customize as needed:
+          # - name: Upload artifacts
+          #   uses: actions/upload-artifact@v4
+          #   with:
+          #     name: build-artifacts-${{ needs.version.outputs.version }}
+          #     path: dist/
+          #     retention-days: 30
+
+  # Build and publish Docker images (main and release branches only)
+  # OPTIONAL: Remove this entire job if you don't use Docker
+  docker:
+    name: Build & Publish Docker
+    runs-on: ubuntu-latest
+    needs: [version, build]
+    if: |
+      (github.ref_name == 'main' || github.ref_name == 'release') && 
+      github.event_name == 'push'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      
+      - name: Build and push Web
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./src/web/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/sysarx-web:${{ needs.version.outputs.version }}
+            ${{ secrets.DOCKER_USERNAME }}/sysarx-web:latest
+          build-args: |
+            VERSION=${{ needs.version.outputs.version }}
+          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/sysarx-web:buildcache
+          cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/sysarx-web:buildcache,mode=max
+      
+      - name: Build and push Auth
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./src/Services/Auth/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/sysarx-auth:${{ needs.version.outputs.version }}
+            ${{ secrets.DOCKER_USERNAME }}/sysarx-auth:latest
+          build-args: |
+            VERSION=${{ needs.version.outputs.version }}
+          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/sysarx-auth:buildcache
+          cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/sysarx-auth:buildcache,mode=max
+      
+      - name: Build and push SysMLStore
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./src/Services/SysMLStore/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/sysarx-sysmlstore:${{ needs.version.outputs.version }}
+            ${{ secrets.DOCKER_USERNAME }}/sysarx-sysmlstore:latest
+          build-args: |
+            VERSION=${{ needs.version.outputs.version }}
+          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/sysarx-sysmlstore:buildcache
+          cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/sysarx-sysmlstore:buildcache,mode=max
+      
+      - name: Build and push SysMLDiagram
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./src/Services/SysMLDiagram/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/sysarx-sysmldiagram:${{ needs.version.outputs.version }}
+            ${{ secrets.DOCKER_USERNAME }}/sysarx-sysmldiagram:latest
+          build-args: |
+            VERSION=${{ needs.version.outputs.version }}
+          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/sysarx-sysmldiagram:buildcache
+          cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/sysarx-sysmldiagram:buildcache,mode=max
+
+  # Create GitHub release and tag (release branch only)
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: [version, docker]
+    if: github.ref_name == 'release' && github.event_name == 'push'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Create Git tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "${{ needs.version.outputs.tag }}" -m "Release ${{ needs.version.outputs.tag }}"
+          git push origin "${{ needs.version.outputs.tag }}"
+      
+      - name: Generate changelog
+        id: changelog
+        run: |
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          if [ -n "$PREVIOUS_TAG" ]; then
+            CHANGELOG=$(git log ${PREVIOUS_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges)
+          else
+            CHANGELOG=$(git log --pretty=format:"- %s (%h)" --no-merges)
+          fi
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.version.outputs.tag }}
+          name: Release ${{ needs.version.outputs.tag }}
+          body: |
+            ## SysArx ${{ needs.version.outputs.tag }}
+            
+            ### Docker Images
+            
+            Pull the images from Docker Hub:
+            
+            ```bash
+            docker pull ${{ secrets.DOCKER_USERNAME }}/sysarx-web:${{ needs.version.outputs.version }}
+            docker pull ${{ secrets.DOCKER_USERNAME }}/sysarx-auth:${{ needs.version.outputs.version }}
+            docker pull ${{ secrets.DOCKER_USERNAME }}/sysarx-sysmlstore:${{ needs.version.outputs.version }}
+            docker pull ${{ secrets.DOCKER_USERNAME }}/sysarx-sysmldiagram:${{ needs.version.outputs.version }}
+            ```
+            
+            ### Changes
+            
+            ${{ steps.changelog.outputs.changelog }}
+            
+            ---
+            
+            **Built:** ${{ github.event.head_commit.timestamp }}  
+            **Commit:** ${{ github.sha }}  
+            **Branch:** ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Sync to main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git checkout main
+          git merge origin/release --no-ff -m "chore: sync release ${{ needs.version.outputs.tag }} to main"
+          git push origin main
+
+  # Automatically update VERSION file after successful merges
+  update-version:
+    name: Update VERSION File
+    runs-on: ubuntu-latest
+    needs: [version, build]
+    if: |
+      github.event_name == 'push' && 
+      (github.ref_name == 'main' || github.ref_name == 'release') &&
+      needs.version.outputs.tag != ''
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Update VERSION file
+        run: |
+          CALCULATED_VERSION="${{ needs.version.outputs.version }}"
+          CURRENT_VERSION=$(cat VERSION)
+          
+          # Determine new VERSION content based on branch and calculated version
+          if [ "${{ github.ref_name }}" = "release" ]; then
+            # On release: Use calculated version (may include -rc temporarily, then clean on final push)
+            NEW_VERSION="${CALCULATED_VERSION}"
+            # If this is the final production release (no -rc), strip all suffixes
+            if [[ ! "$NEW_VERSION" =~ -rc ]]; then
+              NEW_VERSION="${NEW_VERSION%%-*}"
+              NEW_VERSION="${NEW_VERSION%%+*}"
+              echo "📝 Release branch: Setting VERSION to ${NEW_VERSION} (clean production version)"
+            else
+              echo "📝 Release branch: Setting VERSION to ${NEW_VERSION} (includes -rc during merge)"
+            fi
+          elif [ "${{ github.ref_name }}" = "main" ]; then
+            # On main: use the tagged version (includes -alpha or -beta suffix)
+            NEW_VERSION="${{ needs.version.outputs.tag }}"
+            NEW_VERSION="${NEW_VERSION#v}"  # Remove 'v' prefix
+            echo "📝 Main branch: Setting VERSION to ${NEW_VERSION}"
+          fi
+          
+          # Only update if VERSION changed
+          if [ "$CURRENT_VERSION" != "$NEW_VERSION" ]; then
+            echo "$NEW_VERSION" > VERSION
+            
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add VERSION
+            git commit -m "chore: auto-update VERSION to ${NEW_VERSION} [skip ci]"
+            git push origin ${{ github.ref_name }}
+            
+            echo "✅ VERSION updated from ${CURRENT_VERSION} to ${NEW_VERSION}"
+          else
+            echo "ℹ️  VERSION unchanged (${CURRENT_VERSION})"
+          fi
+
+  # Summary
+  summary:
+    name: Build Summary
+    runs-on: ubuntu-latest
+    needs: [version, build]
+    if: always()
+    
+    steps:
+      - name: Display summary
+        run: |
+          echo "## Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version:** ${{ needs.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build Status:** ${{ needs.build.result }}" >> $GITHUB_STEP_SUMMARY
+          if [ -n "${{ needs.version.outputs.tag }}" ]; then
+            echo "- **Tag:** ${{ needs.version.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # Sync branches when main is updated (e.g., from hotfix fast-forward)
+  sync_branches:
+    name: Sync Branches with Main
+    runs-on: ubuntu-latest
+    needs: [version, build]
+    if: github.ref_name == 'main' && github.event_name == 'push'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+      
+      - name: Sync active branches
+        run: |
+          echo "🔄 Checking for branches that need to sync with main..."
+          
+          # Get all remote branches
+          git fetch --all
+          
+          # List of branch patterns to sync
+          BRANCH_PATTERNS=("alpha" "beta" "feature/*" "bugfix/*")
+          SYNCED_COUNT=0
+          
+          for pattern in "${BRANCH_PATTERNS[@]}"; do
+            # Find matching branches
+            if [ "$pattern" = "alpha" ] || [ "$pattern" = "beta" ]; then
+              # Check if exact branch exists
+              if git ls-remote --heads origin "$pattern" | grep -q "$pattern"; then
+                BRANCHES=("$pattern")
+              else
+                BRANCHES=()
+              fi
+            else
+              # Find branches matching pattern (e.g., feature/*)
+              BRANCHES=($(git ls-remote --heads origin "$pattern" | awk -F'/' '{print $NF}' | sed "s|^|${pattern%/*}/|"))
+            fi
+            
+            for branch in "${BRANCHES[@]}"; do
+              if [ -n "$branch" ]; then
+                echo "📦 Syncing branch: $branch"
+                
+                # Checkout the branch
+                git checkout -b "$branch" "origin/$branch" 2>/dev/null || git checkout "$branch"
+                git pull origin "$branch"
+                
+                # Check if main has commits not in this branch
+                BEHIND_COUNT=$(git rev-list --count HEAD..origin/main)
+                
+                if [ "$BEHIND_COUNT" -gt 0 ]; then
+                  echo "  ↳ Branch is $BEHIND_COUNT commits behind main, fast-forwarding..."
+                  
+                  # Attempt fast-forward merge
+                  if git merge --ff-only origin/main; then
+                    git push origin "$branch"
+                    echo "  ✅ Successfully synced $branch with main"
+                    SYNCED_COUNT=$((SYNCED_COUNT + 1))
+                  else
+                    echo "  ⚠️  Cannot fast-forward $branch (has diverged). Manual merge required."
+                  fi
+                else
+                  echo "  ✓ Branch is up to date with main"
+                fi
+                
+                # Return to main
+                git checkout main
+              fi
+            done
+          done
+          
+          echo ""
+          echo "📊 Sync Summary: $SYNCED_COUNT branch(es) synchronized with main"
