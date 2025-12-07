@@ -10,10 +10,6 @@ on:
       - alpha
       - release
 
-env:
-  DOTNET_VERSION: '10.0.x'
-  PYTHON_VERSION: '3.11'
-
 jobs:
   # Calculate version based on branch and commit
   version:
@@ -271,66 +267,60 @@ jobs:
         with:
           fetch-depth: 0
       
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
-      
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-      
       - name: Display version
         run: |
           echo "🏗️  Building version: ${{ needs.version.outputs.version }}"
+          echo "📋 This is a template project - customize the build job with your project's commands"
       
-      - name: Restore dependencies
-        run: dotnet restore
-      
-      - name: Build with version
+      - name: Placeholder - Setup your environment
         run: |
-          dotnet build --no-restore --configuration Release \
-            /p:Version=${{ needs.version.outputs.version }} \
-            /p:AssemblyVersion=${{ needs.version.outputs.version }} \
-            /p:FileVersion=${{ needs.version.outputs.version }}
+          echo "Add your environment setup here"
+          # Example for Node.js: 
+          #   uses: actions/setup-node@v4
+          #   with:
+          #     node-version: '20'
+          # Example for Python:
+          #   uses: actions/setup-python@v5
+          #   with:
+          #     python-version: '3.11'
       
-      - name: Run tests
+      - name: Placeholder - Install dependencies
         run: |
-          dotnet test --no-build --configuration Release \
-            --logger "trx;LogFileName=test-results.trx" \
-            --results-directory TestResults
+          echo "Add your dependency installation here"
+          # Example for Node.js: npm ci
+          # Example for Python: pip install -r requirements.txt
+          # Example for Go: go mod download
       
-      - name: Generate Requirements Matrix
-        if: always()
+      - name: Placeholder - Build
         run: |
-          python scripts/generate-requirements-matrix.py \
-            --test-results TestResults/test-results.trx \
-            --output reports/REQUIREMENTS_MATRIX.md
+          echo "Add your build commands here"
+          echo "Version to use: ${{ needs.version.outputs.version }}"
+          # Example for Node.js: npm run build
+          # Example for Python: python setup.py build
+          # Example for Go: go build -ldflags "-X main.Version=${{ needs.version.outputs.version }}"
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
       
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results-${{ needs.version.outputs.version }}
-          path: TestResults/test-results.trx
-          retention-days: 30
-      
-      - name: Upload requirements matrix
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: requirements-matrix-${{ needs.version.outputs.version }}
-          path: reports/REQUIREMENTS_MATRIX.md
-          retention-days: 30
-      
-      - name: Docker sanity check
+      - name: Placeholder - Run tests
         run: |
-          echo "🐳 Validating Docker Compose configuration..."
-          docker compose config > /dev/null
-          echo "✅ Docker Compose configuration is valid"
+          echo "Add your test commands here"
+          # Example for Node.js: npm test
+          # Example for Python: pytest
+          # Example for Go: go test ./...
+      
+      - name: Placeholder - Upload artifacts (optional)
+        run: |
+          echo "Optionally upload build artifacts"
+          # Uncomment and customize as needed:
+          # - name: Upload artifacts
+          #   uses: actions/upload-artifact@v4
+          #   with:
+          #     name: build-artifacts-${{ needs.version.outputs.version }}
+          #     path: dist/
+          #     retention-days: 30
 
   # Build and publish Docker images (main and release branches only)
+  # OPTIONAL: Remove this entire job if you don't use Docker
   docker:
     name: Build & Publish Docker
     runs-on: ubuntu-latest
