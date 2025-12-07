@@ -396,8 +396,6 @@ git push origin hotfix
 - **[Customization Guide](docs/git-auto-release/CUSTOMIZATION.md)** - Adapt to your needs
 - **[Quick Reference](docs/git-auto-release/QUICK_REFERENCE.md)** - Command cheat sheet
 - **Semantic Versioning Spec**: [https://semver.org/](https://semver.org/)
-2. Create a feature branch
-3. Submit a pull request with improvements
 
 ---
 

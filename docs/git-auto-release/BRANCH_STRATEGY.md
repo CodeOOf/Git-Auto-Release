@@ -134,7 +134,7 @@ The CI/CD pipeline (`.github/workflows/ci-cd-versioned.yml`) **automatically** c
   - Then create `beta` branch from main for stabilization
   - `beta` → `main` merge adds `-beta` suffix to already-bumped version
 - **Minor bump**: When `feature/*` branch merges to `main` → `vX.Y.Z` becomes `vX.Y+1.0-beta` (automatic tag)
-- **Patch bump**: When `bugfix/*` merges to `main`` or `hotfix` merges to `release` → `vX.Y.Z` becomes `vX.Y.Z+1` (automatic tag)
+- **Patch bump**: When `bugfix/*` merges to `main` or `hotfix` merges to `release` → `vX.Y.Z` becomes `vX.Y.Z+1` (automatic tag)
 
 
 #### VERSION File Usage
@@ -147,7 +147,7 @@ The CI/CD pipeline (`.github/workflows/ci-cd-versioned.yml`) **automatically** c
   - `feature/*` → `main`: VERSION becomes `X.Y+1.0-beta`
   - `bugfix/*` → `main`: VERSION becomes `X.Y.Z+1-beta`
   - `hotfix` → `release`: VERSION becomes `X.Y.Z+1-rc.N` then `X.Y.Z+1` (clean)
-  - `main` → `release`: VERSION becomes `X.Y.Z-rc.N` then `X.Y.Z` (clean)hen `X.Y.Z` (clean)
+  - `main` → `release`: VERSION becomes `X.Y.Z-rc.N` then `X.Y.Z` (clean)
 - **No manual intervention required** - CI/CD manages VERSION throughout entire release lifecycle
 - CI/CD strips suffixes, calculates bumps from base X.Y.Z, applies appropriate suffix, and commits back
 

@@ -171,19 +171,21 @@ git commit -m "feat(module): add feature"
 
 # Release features to production
 # PR: main → release → auto-tag (v0.X.0) + GitHub Release
-``` **Workflow Examples**: [`docs/WORKFLOW_EXAMPLES.md`](docs/WORKFLOW_EXAMPLES.md)
-- ⚡ **Quick Reference**: [`docs/QUICK_REFERENCE.md`](docs/QUICK_REFERENCE.md)
-- 🎨 **Customization**: [`docs/CUSTOMIZATION.md`](docs/CUSTOMIZATION.md)
+```
+
+---
+
+## Next Steps
+
+- 📚 **Branch Strategy**: [`BRANCH_STRATEGY.md`](BRANCH_STRATEGY.md)
+- 📋 **Workflow Examples**: [`WORKFLOW_EXAMPLES.md`](WORKFLOW_EXAMPLES.md)
+- ⚡ **Quick Reference**: [`QUICK_REFERENCE.md`](QUICK_REFERENCE.md)
+- 🎨 **Customization**: [`CUSTOMIZATION.md`](CUSTOMIZATION.md)
 
 ---
 
 ## Common First Tasks
 
-### Add a Feature
-```bash
-git checkout alpha
-git checkout -b feature/user-login
-# ... develop ...
 ### Add a Feature
 ```bash
 git checkout main
@@ -193,7 +195,8 @@ git checkout -b feature/user-login
 git commit -m "feat(auth): add user login"
 git push origin feature/user-login
 # Create PR to main
-``` checkout -b bugfix/fix-validation
+```
+
 ### Fix a Bug
 ```bash
 git checkout main
@@ -203,7 +206,8 @@ git checkout -b bugfix/fix-validation
 git commit -m "fix(validation): handle empty input"
 git push origin bugfix/fix-validation
 # Create PR to main
-```. Merge features to alpha
+```
+
 ### Make a Production Release
 ```bash
 # 1. Develop features on feature/* branches from main
@@ -211,6 +215,9 @@ git push origin bugfix/fix-validation
 # 3. Test on staging
 # 4. PR: main → release (creates v0.X.0 tag + GitHub Release)
 ```
+
+---
+
 ## Customization (Optional)
 
 ### For Node.js Projects
@@ -261,9 +268,9 @@ See [`docs/CUSTOMIZATION.md`](docs/CUSTOMIZATION.md) for more languages!
 ## Version Progression Cheat Sheet
 
 | Action | Version Change | Example |
-|--------|---------------|---------|
-| Feature merged | 0.1.0 → 0.2.0-beta | feat → alpha → main |
-| Bug merged | 0.1.0 → 0.1.1-beta | fix → alpha → main |
+|--------|---------------|---------|  
+| Feature merged | 0.1.0 → 0.2.0-beta | feature/* → main |
+| Bug merged | 0.1.0 → 0.1.1-beta | bugfix/* → main |
 | Release to prod | 0.2.0-beta → 0.2.0 | main → release |
 | Hotfix | 1.0.0 → 1.0.1 | hotfix → release |
 | Major release | 0.9.0 → 1.0.0-alpha | alpha → main |
