@@ -145,7 +145,6 @@ After the merge to main completes:
 git fetch --tags
 git tag -l
 # You should see: v0.2.0-beta
-```ou should see: v0.2.0-beta
 ```
 
 ---
