@@ -409,7 +409,7 @@ jobs:
   release:
     name: Create Release
     runs-on: ubuntu-latest
-    needs: [version, build]
+    needs: [version]
     if: github.ref_name == 'release' && github.event_name == 'push'
     
     steps:
