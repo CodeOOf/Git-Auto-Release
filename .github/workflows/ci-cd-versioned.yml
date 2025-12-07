@@ -128,10 +128,62 @@ jobs:
                 TAG=""
                 IS_RELEASE="false"
               else
-                # Push to main after PR merge: Detect bump from commit message or last PR
-                # Check last merged PR to determine version
-                LAST_PR_BRANCH=$(git log -1 --pretty=%B | grep -oP '(?<=from ).*(?=/)' || echo "")
-                case "$LAST_PR_BRANCH" in
+                # Push to main after PR merge: Detect bump from actual merge commit parents
+                # A merge commit has 2 parents: the target branch and the source branch
+                # We can check which branch the second parent belongs to
+                
+                if git rev-parse HEAD^2 &>/dev/null; then
+                  # This is a merge commit (has 2 parents)
+                  MERGE_COMMIT_PARENT=$(git rev-parse HEAD^2)
+                  
+                  # Check which branches contain this commit
+                  # The source branch should contain the second parent
+                  BRANCH_TYPE=""
+                  
+                  # Check if commit came from alpha
+                  if git branch -r --contains "$MERGE_COMMIT_PARENT" | grep -q "origin/alpha"; then
+                    BRANCH_TYPE="alpha"
+                  # Check if commit came from beta
+                  elif git branch -r --contains "$MERGE_COMMIT_PARENT" | grep -q "origin/beta"; then
+                    BRANCH_TYPE="beta"
+                  # Check if commit came from feature/*
+                  elif git branch -r --contains "$MERGE_COMMIT_PARENT" | grep -q "origin/feature/"; then
+                    BRANCH_TYPE="feature"
+                  # Check if commit came from bugfix/*
+                  elif git branch -r --contains "$MERGE_COMMIT_PARENT" | grep -q "origin/bugfix/"; then
+                    BRANCH_TYPE="bugfix"
+                  else
+                    # Could be from a deleted branch - try to get PR info from GitHub API
+                    MERGE_COMMIT_MSG=$(git log -1 --pretty=%B)
+                    PR_NUMBER=$(echo "$MERGE_COMMIT_MSG" | grep -oP '\(#\K[0-9]+(?=\))' || echo "")
+                    
+                    if [ -n "$PR_NUMBER" ]; then
+                      PR_INFO=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                        "https://api.github.com/repos/${{ github.repository }}/pulls/$PR_NUMBER")
+                      LAST_PR_BRANCH=$(echo "$PR_INFO" | grep -oP '"ref":\s*"\K[^"]+' | head -1)
+                      
+                      if [[ "$LAST_PR_BRANCH" == "alpha" ]]; then
+                        BRANCH_TYPE="alpha"
+                      elif [[ "$LAST_PR_BRANCH" == "beta" ]]; then
+                        BRANCH_TYPE="beta"
+                      elif [[ "$LAST_PR_BRANCH" =~ ^feature/ ]]; then
+                        BRANCH_TYPE="feature"
+                      elif [[ "$LAST_PR_BRANCH" =~ ^bugfix/ ]]; then
+                        BRANCH_TYPE="bugfix"
+                      fi
+                    fi
+                  fi
+                  
+                  if [ -z "$BRANCH_TYPE" ]; then
+                    BRANCH_TYPE="unknown"
+                    echo "⚠️  Warning: Could not determine source branch type"
+                  fi
+                else
+                  # Not a merge commit, treat as direct push
+                  BRANCH_TYPE="unknown"
+                fi
+                
+                case "$BRANCH_TYPE" in
                   alpha)
                     # Merged from alpha = MAJOR bump automatically
                     NEXT_MAJOR=$((MAJOR + 1))
@@ -567,6 +619,29 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+      
+      - name: Create beta branch if needed
+        run: |
+          # Check if beta branch exists
+          if ! git ls-remote --heads origin beta | grep -q beta; then
+            # Check if VERSION has -alpha suffix (indicating alpha was just merged)
+            if [ -f VERSION ]; then
+              VERSION_CONTENT=$(cat VERSION)
+              if [[ "$VERSION_CONTENT" =~ -alpha ]]; then
+                echo "🌿 Creating beta branch from main (alpha was just merged)"
+                git checkout -b beta
+                git push origin beta
+                echo "✅ Beta branch created successfully"
+              else
+                echo "ℹ️  No -alpha suffix in VERSION, beta branch not needed yet"
+              fi
+            fi
+          else
+            echo "ℹ️  Beta branch already exists"
+          fi
+          
+          # Return to main
+          git checkout main
       
       - name: Sync active branches
         run: |
