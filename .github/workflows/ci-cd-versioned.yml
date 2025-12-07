@@ -371,90 +371,45 @@ jobs:
           #     path: dist/
           #     retention-days: 30
 
-  # Build and publish Docker images (main and release branches only)
-  # OPTIONAL: Remove this entire job if you don't use Docker
-  docker:
-    name: Build & Publish Docker
-    runs-on: ubuntu-latest
-    needs: [version, build]
-    if: |
-      (github.ref_name == 'main' || github.ref_name == 'release') && 
-      github.event_name == 'push'
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-      
-      - name: Build and push Web
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./src/web/Dockerfile
-          push: true
-          tags: |
-            ${{ secrets.DOCKER_USERNAME }}/sysarx-web:${{ needs.version.outputs.version }}
-            ${{ secrets.DOCKER_USERNAME }}/sysarx-web:latest
-          build-args: |
-            VERSION=${{ needs.version.outputs.version }}
-          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/sysarx-web:buildcache
-          cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/sysarx-web:buildcache,mode=max
-      
-      - name: Build and push Auth
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./src/Services/Auth/Dockerfile
-          push: true
-          tags: |
-            ${{ secrets.DOCKER_USERNAME }}/sysarx-auth:${{ needs.version.outputs.version }}
-            ${{ secrets.DOCKER_USERNAME }}/sysarx-auth:latest
-          build-args: |
-            VERSION=${{ needs.version.outputs.version }}
-          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/sysarx-auth:buildcache
-          cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/sysarx-auth:buildcache,mode=max
-      
-      - name: Build and push SysMLStore
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./src/Services/SysMLStore/Dockerfile
-          push: true
-          tags: |
-            ${{ secrets.DOCKER_USERNAME }}/sysarx-sysmlstore:${{ needs.version.outputs.version }}
-            ${{ secrets.DOCKER_USERNAME }}/sysarx-sysmlstore:latest
-          build-args: |
-            VERSION=${{ needs.version.outputs.version }}
-          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/sysarx-sysmlstore:buildcache
-          cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/sysarx-sysmlstore:buildcache,mode=max
-      
-      - name: Build and push SysMLDiagram
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./src/Services/SysMLDiagram/Dockerfile
-          push: true
-          tags: |
-            ${{ secrets.DOCKER_USERNAME }}/sysarx-sysmldiagram:${{ needs.version.outputs.version }}
-            ${{ secrets.DOCKER_USERNAME }}/sysarx-sysmldiagram:latest
-          build-args: |
-            VERSION=${{ needs.version.outputs.version }}
-          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/sysarx-sysmldiagram:buildcache
-          cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/sysarx-sysmldiagram:buildcache,mode=max
+  # EXAMPLE: Build and publish Docker images (commented out - uncomment and customize for your project)
+  # docker:
+  #   name: Build & Publish Docker
+  #   runs-on: ubuntu-latest
+  #   needs: [version, build]
+  #   if: |
+  #     (github.ref_name == 'main' || github.ref_name == 'release') && 
+  #     github.event_name == 'push'
+  #   
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
+  #     
+  #     - name: Set up Docker Buildx
+  #       uses: docker/setup-buildx-action@v3
+  #     
+  #     - name: Login to Docker Hub
+  #       uses: docker/login-action@v3
+  #       with:
+  #         username: ${{ secrets.DOCKER_USERNAME }}
+  #         password: ${{ secrets.DOCKER_PASSWORD }}
+  #     
+  #     - name: Build and push
+  #       uses: docker/build-push-action@v5
+  #       with:
+  #         context: .
+  #         file: ./Dockerfile
+  #         push: true
+  #         tags: |
+  #           ${{ secrets.DOCKER_USERNAME }}/your-image:${{ needs.version.outputs.version }}
+  #           ${{ secrets.DOCKER_USERNAME }}/your-image:latest
+  #         build-args: |
+  #           VERSION=${{ needs.version.outputs.version }}
 
   # Create GitHub release and tag (release branch only)
   release:
     name: Create Release
     runs-on: ubuntu-latest
-    needs: [version, docker]
+    needs: [version, build]
     if: github.ref_name == 'release' && github.event_name == 'push'
     
     steps:
@@ -487,18 +442,7 @@ jobs:
           tag_name: ${{ needs.version.outputs.tag }}
           name: Release ${{ needs.version.outputs.tag }}
           body: |
-            ## SysArx ${{ needs.version.outputs.tag }}
-            
-            ### Docker Images
-            
-            Pull the images from Docker Hub:
-            
-            ```bash
-            docker pull ${{ secrets.DOCKER_USERNAME }}/sysarx-web:${{ needs.version.outputs.version }}
-            docker pull ${{ secrets.DOCKER_USERNAME }}/sysarx-auth:${{ needs.version.outputs.version }}
-            docker pull ${{ secrets.DOCKER_USERNAME }}/sysarx-sysmlstore:${{ needs.version.outputs.version }}
-            docker pull ${{ secrets.DOCKER_USERNAME }}/sysarx-sysmldiagram:${{ needs.version.outputs.version }}
-            ```
+            ## Release ${{ needs.version.outputs.tag }}
             
             ### Changes
             
