@@ -128,9 +128,8 @@ jobs:
                 TAG=""
                 IS_RELEASE="false"
               else
-                # Push to main after PR merge: Detect bump from actual merge commit parents
-                # A merge commit has 2 parents: the target branch and the source branch
-                # We can check which branch the second parent belongs to
+                # Push to main after PR merge: Detect bump from merge commit or squash merge
+                BRANCH_TYPE=""
                 
                 if git rev-parse HEAD^2 &>/dev/null; then
                   # This is a merge commit (has 2 parents)
@@ -138,7 +137,6 @@ jobs:
                   
                   # Check which branches contain this commit
                   # The source branch should contain the second parent
-                  BRANCH_TYPE=""
                   
                   # Check if commit came from alpha
                   if git branch -r --contains "$MERGE_COMMIT_PARENT" | grep -q "origin/alpha"; then
@@ -152,35 +150,37 @@ jobs:
                   # Check if commit came from bugfix/*
                   elif git branch -r --contains "$MERGE_COMMIT_PARENT" | grep -q "origin/bugfix/"; then
                     BRANCH_TYPE="bugfix"
-                  else
-                    # Could be from a deleted branch - try to get PR info from GitHub API
-                    MERGE_COMMIT_MSG=$(git log -1 --pretty=%B)
-                    PR_NUMBER=$(echo "$MERGE_COMMIT_MSG" | grep -oP '\(#\K[0-9]+(?=\))' || echo "")
-                    
-                    if [ -n "$PR_NUMBER" ]; then
-                      PR_INFO=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-                        "https://api.github.com/repos/${{ github.repository }}/pulls/$PR_NUMBER")
-                      LAST_PR_BRANCH=$(echo "$PR_INFO" | grep -oP '"ref":\s*"\K[^"]+' | head -1)
-                      
-                      if [[ "$LAST_PR_BRANCH" == "alpha" ]]; then
-                        BRANCH_TYPE="alpha"
-                      elif [[ "$LAST_PR_BRANCH" == "beta" ]]; then
-                        BRANCH_TYPE="beta"
-                      elif [[ "$LAST_PR_BRANCH" =~ ^feature/ ]]; then
-                        BRANCH_TYPE="feature"
-                      elif [[ "$LAST_PR_BRANCH" =~ ^bugfix/ ]]; then
-                        BRANCH_TYPE="bugfix"
-                      fi
-                    fi
                   fi
+                fi
+                
+                # If not a merge commit or branch not found, check for squash merge via API
+                if [ -z "$BRANCH_TYPE" ]; then
+                  MERGE_COMMIT_MSG=$(git log -1 --pretty=%B)
+                  PR_NUMBER=$(echo "$MERGE_COMMIT_MSG" | grep -oP '\(#\K[0-9]+(?=\))' || echo "")
                   
-                  if [ -z "$BRANCH_TYPE" ]; then
-                    BRANCH_TYPE="unknown"
-                    echo "⚠️  Warning: Could not determine source branch type"
+                  if [ -n "$PR_NUMBER" ]; then
+                    echo "🔍 Detected PR #${PR_NUMBER}, querying GitHub API for source branch..."
+                    PR_INFO=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                      "https://api.github.com/repos/${{ github.repository }}/pulls/$PR_NUMBER")
+                    LAST_PR_BRANCH=$(echo "$PR_INFO" | grep -oP '"ref":\s*"\K[^"]+' | head -1)
+                    
+                    if [[ "$LAST_PR_BRANCH" == "alpha" ]]; then
+                      BRANCH_TYPE="alpha"
+                    elif [[ "$LAST_PR_BRANCH" == "beta" ]]; then
+                      BRANCH_TYPE="beta"
+                    elif [[ "$LAST_PR_BRANCH" =~ ^feature/ ]]; then
+                      BRANCH_TYPE="feature"
+                    elif [[ "$LAST_PR_BRANCH" =~ ^bugfix/ ]]; then
+                      BRANCH_TYPE="bugfix"
+                    fi
+                    
+                    echo "✅ Source branch from API: ${LAST_PR_BRANCH} -> type: ${BRANCH_TYPE}"
                   fi
-                else
-                  # Not a merge commit, treat as direct push
+                fi
+                
+                if [ -z "$BRANCH_TYPE" ]; then
                   BRANCH_TYPE="unknown"
+                  echo "⚠️  Warning: Could not determine source branch type"
                 fi
                 
                 case "$BRANCH_TYPE" in
@@ -488,16 +488,26 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
       
-      - name: Check if merge commit
+      - name: Check if merge commit or squash merge
         id: check_merge
         run: |
           # Check if this is a merge commit (has 2 parents)
           if git rev-parse HEAD^2 &>/dev/null; then
             echo "is_merge=true" >> $GITHUB_OUTPUT
-            echo "✅ This is a merge commit"
+            echo "merge_type=merge" >> $GITHUB_OUTPUT
+            echo "✅ This is a merge commit (2 parents)"
           else
-            echo "is_merge=false" >> $GITHUB_OUTPUT
-            echo "ℹ️  This is a direct commit, skipping VERSION update"
+            # Check if this is a squash merge by looking for PR number
+            COMMIT_MSG=$(git log -1 --pretty=%B)
+            if [[ "$COMMIT_MSG" =~ \(#[0-9]+\) ]]; then
+              echo "is_merge=true" >> $GITHUB_OUTPUT
+              echo "merge_type=squash" >> $GITHUB_OUTPUT
+              echo "✅ This is a squash merge (PR found in commit message)"
+            else
+              echo "is_merge=false" >> $GITHUB_OUTPUT
+              echo "merge_type=none" >> $GITHUB_OUTPUT
+              echo "ℹ️  This is a direct commit, skipping VERSION update"
+            fi
           fi
       
       - name: Update VERSION file
@@ -582,16 +592,23 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
       
-      - name: Check if merge commit
+      - name: Check if merge commit or squash merge
         id: check_merge
         run: |
           # Check if this is a merge commit (has 2 parents)
           if git rev-parse HEAD^2 &>/dev/null; then
             echo "is_merge=true" >> $GITHUB_OUTPUT
-            echo "✅ This is a merge commit"
+            echo "✅ This is a merge commit (2 parents)"
           else
-            echo "is_merge=false" >> $GITHUB_OUTPUT
-            echo "ℹ️  This is a direct commit, skipping branch sync"
+            # Check if this is a squash merge by looking for PR number
+            COMMIT_MSG=$(git log -1 --pretty=%B)
+            if [[ "$COMMIT_MSG" =~ \(#[0-9]+\) ]]; then
+              echo "is_merge=true" >> $GITHUB_OUTPUT
+              echo "✅ This is a squash merge (PR found in commit message)"
+            else
+              echo "is_merge=false" >> $GITHUB_OUTPUT
+              echo "ℹ️  This is a direct commit, skipping branch sync"
+            fi
           fi
       
       - name: Create beta branch if needed
