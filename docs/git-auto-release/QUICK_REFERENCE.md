@@ -132,8 +132,6 @@ git push origin hotfix
 
 ---
 
----
-
 ## 📊 Version Progression Cheat Sheet
 
 ### Standard Version Bumps
