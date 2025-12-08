@@ -227,7 +227,6 @@ Clients must update to use Authorization: Bearer <token> header."
 
 ---
 
----
 
 ## 🛠️ Common Git Commands
 
