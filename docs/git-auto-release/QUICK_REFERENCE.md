@@ -169,8 +169,6 @@ git push origin hotfix
 
 ---
 
----
-
 ## ✍️ Commit Message Format
 
 ```
