@@ -213,7 +213,7 @@ git commit -m "fix(login): prevent duplicate submissions
 Closes #123"
 
 # Breaking change with migration notes
-git commit -m "feat!(api)!: change authentication to JWT
+git commit -m "feat!(api): change authentication to JWT
 
 BREAKING CHANGE: API now requires JWT tokens instead of API keys.
 Clients must update to use Authorization: Bearer <token> header."
