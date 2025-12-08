@@ -10,7 +10,7 @@ Git-Auto-Release/
 │   ├── SETUP_GUIDE.md            # Complete setup instructions
 │   ├── WORKFLOW_EXAMPLES.md      # Real-world usage examples
 │   ├── CUSTOMIZATION.md          # How to customize the template
-│   └── QUICK_REFERENCE.md        # Fast command reference
+│   └── QUICK_REFERENCE.md        # Daily usage cheat sheet
 ├── BRANCH_STRATEGY.md            # Detailed branch strategy
 ├── LICENSE                       # MIT License
 ├── README.md                     # Main project documentation
@@ -123,13 +123,15 @@ Git-Auto-Release/
   - Branch strategy adjustments
 
 #### `QUICK_REFERENCE.md`
-- **Purpose**: Fast command reference
+- **Purpose**: Daily usage command cheat sheet (for established projects)
 - **Contents**:
-  - Common commands
+  - Decision tree for daily tasks
+  - Workflow commands (feature, bugfix, hotfix, release)
   - Version progression tables
-  - Commit message formats
-  - Troubleshooting commands
-  - Quick links
+  - Commit message examples
+  - Git command reference
+  - Troubleshooting quick fixes
+- **Note**: For initial setup, see `QUICKSTART.md`
 
 ---
 
@@ -193,10 +195,11 @@ README.md (overview)
     ├── Quick start
     ├── → BRANCH_STRATEGY.md (detailed strategy)
     └── → docs/
-        ├── SETUP_GUIDE.md (how to set up)
-        ├── WORKFLOW_EXAMPLES.md (how to use)
-        ├── CUSTOMIZATION.md (how to customize)
-        └── QUICK_REFERENCE.md (fast reference)
+        ├── QUICKSTART.md (initial setup)
+        ├── SETUP_GUIDE.md (detailed configuration)
+        ├── WORKFLOW_EXAMPLES.md (step-by-step scenarios)
+        ├── CUSTOMIZATION.md (advanced customization)
+        └── QUICK_REFERENCE.md (daily usage cheat sheet)
 ```
 
 ---
@@ -206,16 +209,17 @@ README.md (overview)
 ### For Template Users
 
 1. **Read**: `README.md` for overview
-2. **Follow**: `docs/SETUP_GUIDE.md` for setup
-3. **Reference**: `docs/QUICK_REFERENCE.md` for daily use
-4. **Customize**: `.github/workflows/ci-cd-versioned.yml`
+2. **Setup**: `docs/QUICKSTART.md` for fast initial setup (5 min)
+3. **Configure**: `docs/SETUP_GUIDE.md` for detailed configuration
+4. **Daily Use**: `docs/QUICK_REFERENCE.md` for commands and workflows
+5. **Customize**: `.github/workflows/ci-cd-versioned.yml` as needed
 
 ### For Contributors
 
 1. **Read**: `CONTRIBUTING.md`
 2. **Reference**: `BRANCH_STRATEGY.md`
 3. **Follow**: Commit conventions
-4. **Use**: `docs/QUICK_REFERENCE.md` for commands
+4. **Use**: `docs/QUICK_REFERENCE.md` for daily commands
 
 ### For Maintainers
 
@@ -296,10 +300,11 @@ README.md (overview)
 
 ## Quick Navigation
 
-- **Getting Started**: [README.md](../README.md)
-- **Setup**: [docs/SETUP_GUIDE.md](SETUP_GUIDE.md)
-- **Customization**: [docs/CUSTOMIZATION.md](CUSTOMIZATION.md)
-- **Quick Reference**: [docs/QUICK_REFERENCE.md](QUICK_REFERENCE.md)
+- **Getting Started**: [README.md](README.md)
+- **Fast Setup**: [docs/QUICKSTART.md](QUICKSTART.md) - 5 minute setup
+- **Detailed Setup**: [docs/SETUP_GUIDE.md](SETUP_GUIDE.md) - Full configuration
+- **Daily Usage**: [docs/QUICK_REFERENCE.md](QUICK_REFERENCE.md) - Command cheat sheet
+- **Customization**: [docs/CUSTOMIZATION.md](CUSTOMIZATION.md) - Advanced topics
 
 ---
 

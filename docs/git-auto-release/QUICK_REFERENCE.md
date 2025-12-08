@@ -1,33 +1,34 @@
 # Quick Reference Guide
 
-📖 **Navigation**: [← README](../README.md) | [Customization Guide](CUSTOMIZATION.md) | **Quick Reference**
+📖 **Navigation**: [← README](README.md) | [Quickstart](QUICKSTART.md) | **Quick Reference**
 
-Fast reference for Git Auto Release commands and workflows.
+> **🎯 For initial setup**, see [QUICKSTART.md](QUICKSTART.md)  
+> **This guide is for daily usage** after Git-Auto-Release is established in your project.
 
 ---
 
-## 🚀 Quick Decision Guide
+## 🚀 Quick Decision Tree
 
-**Need help choosing the right workflow?** Use this flowchart:
+**What do you need to do today?**
 
 ```mermaid
 flowchart TD
-    Start{What do I need?}
+    Start{What's your task?}
     
     Feature[Add a feature]
     Bug[Fix a bug]
-    Breaking[Make breaking changes]
-    Emergency[Emergency production fix]
+    Breaking[Breaking change]
+    Emergency[Production emergency]
     
     Start --> Feature
     Start --> Bug
     Start --> Breaking
     Start --> Emergency
     
-    Feature -->|feature/* from main| FeatureFlow[feature/* → main → release<br/>MINOR version bump]
-    Bug -->|bugfix/* from main| BugFlow[bugfix/* → main → release<br/>PATCH version bump]
-    Breaking -->|alpha from main| BreakingFlow[alpha → main → release<br/>Optional: beta for testing<br/>MAJOR version bump]
-    Emergency -->|hotfix from release| EmergencyFlow[hotfix → release<br/>PATCH version bump<br/>Auto-syncs to all branches]
+    Feature -->|feature/* from main| FeatureFlow[Create feature/* branch<br/>Commit with feat:<br/>PR to main → MINOR bump]
+    Bug -->|bugfix/* from main| BugFlow[Create bugfix/* branch<br/>Commit with fix:<br/>PR to main → PATCH bump]
+    Breaking -->|alpha from main| BreakingFlow[Work on alpha branch<br/>Commit with feat!:<br/>PR to main → MAJOR bump]
+    Emergency -->|hotfix from release| EmergencyFlow[Create hotfix branch<br/>Commit with fix:<br/>PR to release → PATCH bump]
     
     style Start fill:#3498db,color:#fff
     style Feature fill:#2ecc71,color:#fff
@@ -36,230 +37,343 @@ flowchart TD
     style Emergency fill:#e74c3c,color:#fff
 ```
 
-### Quick Actions
-
-- **Adding a feature?** → See [Feature Development Workflow](WORKFLOW_EXAMPLES.md#1-feature-development)
-- **Fixing a bug?** → See [Bug Fix Workflow](WORKFLOW_EXAMPLES.md#2-bug-fixes)
-- **Making breaking changes?** → See [Branch Strategy: Alpha Branch](BRANCH_STRATEGY.md#alpha-branch-optional) and [Major Release Workflow](WORKFLOW_EXAMPLES.md#4-major-release-breaking-changes)
-- **Emergency production fix?** → See [Hotfix Workflow](WORKFLOW_EXAMPLES.md#7-hotfix-production-emergency)
+**Quick links to detailed workflows:**
+- 🎨 [Feature Development](WORKFLOW_EXAMPLES.md#1-feature-development)
+- 🐛 [Bug Fixes](WORKFLOW_EXAMPLES.md#2-bug-fixes)
+- 💥 [Breaking Changes](WORKFLOW_EXAMPLES.md#4-major-release-breaking-changes)
+- 🚨 [Hotfix Emergency](WORKFLOW_EXAMPLES.md#7-hotfix-production-emergency)
 
 ---
 
-## Common Commands
+## 📋 Daily Workflow Commands
+---
 
-### Initial Setup
+## 📋 Daily Workflow Commands
 
-```bash
-# Clone template
-git clone https://github.com/CodeOOf/Git-Auto-Release.git my-project
-cd my-project
-
-# Set version
-echo "0.1.0" > VERSION
-
-# Create branches
-git checkout -b alpha
-git push -u origin main alpha
-git checkout -b release
-git push -u origin release
-```
-
-### Feature Development
+### Feature Development (MINOR bump)
 
 ```bash
 # Start feature
 git checkout main
 git pull origin main
-git checkout -b feature/my-feature
+git checkout -b feature/my-awesome-feature
 
-# Commit
+# Work and commit (use conventional commits)
 git add .
-git commit -m "feat(module): add feature description"
+git commit -m "feat(module): add awesome feature"
 
-# Push and create PR
-git push origin feature/my-feature
-# Open PR: feature/my-feature → main
+# Push and create PR to main
+git push origin feature/my-awesome-feature
+# Create PR: feature/my-awesome-feature → main
 ```
 
-### Bug Fix
+**Result after merge**: `v0.2.0-beta` tag created, VERSION updated
+
+---
+
+### Bug Fix (PATCH bump)
 
 ```bash
 # Start bugfix
 git checkout main
-git checkout -b bugfix/123-fix-issue
+git pull origin main
+git checkout -b bugfix/fix-critical-issue
 
-# Commit
-git commit -m "fix(module): fix issue description"
+# Work and commit
+git add .
+git commit -m "fix(module): resolve critical issue"
 
-# Push and create PR
-git push origin bugfix/123-fix-issue
-# Open PR: bugfix/123-fix-issue → main
+# Push and create PR to main
+git push origin bugfix/fix-critical-issue
+# Create PR: bugfix/fix-critical-issue → main
 ```
 
-### Hotfix (Emergency)
+**Result after merge**: `v0.1.1-beta` tag created, VERSION updated
+
+---
+
+### Production Release
 
 ```bash
-# Start hotfix
+# Release tested beta to production
+# Create PR: main → release
+
+# On GitHub:
+# 1. Create PR from main to release
+# 2. Get 2 approvals (review carefully!)
+# 3. Merge PR
+```
+
+**Result after merge**: `v0.2.0` tag created, GitHub Release published, VERSION updated
+
+---
+
+### Hotfix Emergency (PATCH bump)
+
+```bash
+# Start hotfix from release
 git checkout release
 git pull origin release
 git checkout -b hotfix
 
-# Commit
-git commit -m "fix(critical): emergency fix"
+# Fix and commit
+git add .
+git commit -m "fix(critical): emergency production fix"
 
-# Push and create PR
+# Push and create PR to release
 git push origin hotfix
-# Open PR: hotfix → release
+# Create PR: hotfix → release
 ```
 
-### Major Release
+**Result after merge**: 
+- `v1.0.1` tag created and released
+- VERSION updated
+- Changes auto-sync to main and all active branches
+
+---
+
+---
+
+## 📊 Version Progression Cheat Sheet
+
+### Standard Version Bumps
+
+| Merge Action | Current | Next Version | Tag Created | Notes |
+|--------------|---------|--------------|-------------|-------|
+| feature/* → main | 0.1.0 | 0.2.0-beta | v0.2.0-beta | MINOR bump |
+| bugfix/* → main | 0.1.0 | 0.1.1-beta | v0.1.1-beta | PATCH bump |
+| main → release | 1.0.0-beta | 1.0.0 | v1.0.0 | Production release |
+| hotfix → release | 1.0.0 | 1.0.1 | v1.0.1 | Emergency fix |
+
+### Major Release Progression
+
+| Step | Merge Action | Version Created | Tag | Branch Created |
+|------|--------------|-----------------|-----|----------------|
+| 1 | alpha → main | 1.0.0-alpha | v1.0.0-alpha | beta (auto) |
+| 2 | beta → main | 1.0.0-beta | v1.0.0-beta | - |
+| 3 | main → release | 1.0.0 | v1.0.0 | - |
+
+### Beta Refinement (During Major Release)
+
+| Merge Action | Current | Next Version | Tag Created |
+|--------------|---------|--------------|-------------|
+| bugfix/* → main | 1.0.0-beta | 1.0.0-beta.1 | v1.0.0-beta.1 |
+| bugfix/* → main | 1.0.0-beta.1 | 1.0.0-beta.2 | v1.0.0-beta.2 |
+
+### Build Versions (Development, No Tags)
+
+| Branch Type | Version Format | Example |
+|-------------|----------------|---------|
+| feature/* | base+commit | v0.1.0+c8d92a14 |
+| bugfix/* | base+commit | v0.1.0+f14e2c91 |
+| alpha | base+commit | v0.1.0+a3f2b1c8 |
+| hotfix | base-hotfix.N | v1.0.0-hotfix.1 |
+
+---
+
+---
+
+## ✍️ Commit Message Format
+
+```
+type(scope): short description
+
+[optional body explaining what and why]
+
+[optional footer with breaking changes or issue refs]
+```
+
+### Commit Types Reference
+
+| Type | Use For | Example |
+|------|---------|---------|
+| `feat` | New features | `feat(auth): add OAuth2 support` |
+| `fix` | Bug fixes | `fix(api): handle null responses correctly` |
+| `feat!` | Breaking changes | `feat!(api): redesign REST endpoints to GraphQL` |
+| `docs` | Documentation only | `docs(readme): update installation instructions` |
+| `style` | Code formatting | `style(app): fix indentation in main.js` |
+| `refactor` | Code restructuring | `refactor(auth): simplify token validation` |
+| `perf` | Performance improvements | `perf(db): optimize query performance` |
+| `test` | Adding tests | `test(auth): add token validation tests` |
+| `chore` | Maintenance tasks | `chore(deps): update dependencies` |
+
+### More Examples
 
 ```bash
-# 1. Merge alpha → main
-# Creates tag: v1.0.0-alpha
+# Feature with details
+git commit -m "feat(dashboard): add user analytics chart
 
-# 2. Test on beta branch (auto-created)
-git checkout beta
-# Make fixes if needed
+- Added chart component with D3.js
+- Integrated with analytics API
+- Added date range selector"
 
-# 3. Merge beta → main
-# Creates tag: v1.0.0-beta
+# Bug fix with issue reference
+git commit -m "fix(login): prevent duplicate submissions
 
-# 4. Merge main → release
-# Creates tag: v1.0.0 (production)
+Closes #123"
+
+# Breaking change with migration notes
+git commit -m "feat!(api)!: change authentication to JWT
+
+BREAKING CHANGE: API now requires JWT tokens instead of API keys.
+Clients must update to use Authorization: Bearer <token> header."
 ```
+
+> **💡 Important**: Version bumps are determined by **branch type**, not commit messages!
+> - `feature/*` → main = MINOR bump
+> - `bugfix/*` → main = PATCH bump  
+> - `alpha` → main = MAJOR bump
+> - `hotfix` → release = PATCH bump
+>
+> Use conventional commits for clarity and changelog generation, not versioning control.
 
 ---
 
-## Version Progression
-
-| Action | Current | Next Version | Tag Created |
-|--------|---------|--------------|-------------|
-| Merge feature → main | 0.1.0 | 0.2.0-beta | v0.2.0-beta |
-| Merge bugfix → main | 0.1.0 | 0.1.1-beta | v0.1.1-beta |
-| Merge bugfix → main (during beta) | 1.0.0-beta | 1.0.0-beta.1 | v1.0.0-beta.1 |
-| Merge alpha → main | 0.9.0 | 1.0.0-alpha | v1.0.0-alpha |
-| Merge main → release | 1.0.0-beta | 1.0.0 | v1.0.0 |
-| Merge hotfix → release | 1.0.0 | 1.0.1 | v1.0.1 |
-
 ---
 
-## Build Versions (No Tags)
+## 🛠️ Common Git Commands
 
-| Branch | Push Version Example |
-|--------|---------------------|
-| alpha | v0.1.0+a3f2b1c8 |
-| beta | v1.0.0-alpha+7f82b432 |
-| feature/* | v0.1.0+c8d92a14 |
-| bugfix/* | v0.1.0+f14e2c91 |
-| hotfix | v1.0.0-hotfix.1 |
-
----
-
-## Commit Message Format
-
-```
-type(scope): description
-
-[optional body]
-
-[optional footer]
-```
-
-### Types
-
-| Type | Description | Version Impact |
-|------|-------------|----------------|
-| `feat` | New feature | MINOR bump when merged to main |
-| `fix` | Bug fix | PATCH bump when merged to main |
-| `feat!` | Breaking change | MAJOR bump when merged to main |
-| `docs` | Documentation | No version bump |
-| `style` | Formatting | No version bump |
-| `refactor` | Code restructure | No version bump |
-| `test` | Tests | No version bump |
-| `chore` | Maintenance | No version bump |
-
-### Examples
+### Branch Management
 
 ```bash
-feat(auth): add OAuth2 support
-fix(api): handle null responses
-feat!(api): redesign REST to GraphQL
-docs(readme): update installation steps
-test(auth): add token validation tests
-chore(deps): update dependencies
+# View all branches (local and remote)
+git branch -a
+
+# Switch branches and pull latest
+git checkout main
+git pull origin main
+
+# Delete merged feature branch
+git branch -d feature/my-feature
+git push origin --delete feature/my-feature
+
+# Sync your fork with upstream
+git fetch upstream
+git checkout main
+git merge upstream/main
+```
+
+### Tag Operations
+
+```bash
+# View all tags
+git tag -l
+
+# View tags matching pattern
+git tag -l "v1.*"
+
+# Fetch latest tags from remote
+git fetch --tags
+
+# View tag details
+git show v1.0.0
+
+# Checkout specific tag
+git checkout v1.0.0
+```
+
+### Commit History
+
+```bash
+# View pretty commit history
+git log --oneline --graph --all
+
+# View commits by author
+git log --author="YourName"
+
+# View commits in date range
+git log --since="2024-01-01" --until="2024-12-31"
+
+# Search commits by message
+git log --grep="fix(auth)"
+
+# View file history
+git log --follow -- path/to/file
+```
+
+### Undoing Changes
+
+```bash
+# Undo last commit (keep changes staged)
+git reset --soft HEAD~1
+
+# Undo last commit (keep changes unstaged)
+git reset HEAD~1
+
+# Discard local changes to file
+git checkout -- path/to/file
+
+# Discard all local changes
+git reset --hard HEAD
+
+# Amend last commit message
+git commit --amend -m "new message"
+
+# Amend last commit (add forgotten files)
+git add forgotten-file.txt
+git commit --amend --no-edit
+```
+
+### Interactive Rebase (Clean Up Commits)
+
+```bash
+# Squash last 3 commits before PR
+git rebase -i HEAD~3
+
+# In the editor:
+# - Change 'pick' to 'squash' for commits to combine
+# - Save and close
+# - Edit combined commit message
 ```
 
 ---
 
-## Branch Protection Rules
-
-### `main` Branch
-
-- ✅ Require PR before merging
-- ✅ Require 1 approval
-- ✅ Require status checks: `Build & Test`, `Calculate Version`
-- ✅ Require conversation resolution
-
-### `release` Branch
-
-- ✅ Require PR before merging
-- ✅ Require 2 approvals
-- ✅ Require status checks: `Calculate Version`
-- ✅ Require conversation resolution
-
 ---
 
-## GitHub Actions Workflow
-
-### Triggers
-
-| Event | Branches | Action |
-|-------|----------|--------|
-| Push | All branches | Build, test, calculate version |
-| PR | main, alpha, release | Build, test, show version |
-| Merge to main | - | Create tag, update VERSION |
-| Merge to release | - | Create tag, release, update VERSION |
-
-### Jobs
-
-1. **version** - Calculate semantic version
-2. **build** - Build and test code
-3. **docker** - Build and push Docker images (optional)
-4. **release** - Create GitHub release (release branch only)
-5. **update-version** - Update VERSION file
-
----
-
-## Troubleshooting
+## 🔧 Troubleshooting Quick Fixes
 
 ### Workflow Not Running
 
 ```bash
-# Check workflow file
-cat .github/workflows/ci-cd-versioned.yml
+# 1. Verify workflow file exists
+ls .github/workflows/ci-cd-versioned.yml
 
-# Check GitHub Actions settings
-# Settings → Actions → General → Enable
+# 2. Check GitHub Actions is enabled
+# Go to: Settings → Actions → General → Enable
+
+# 3. Check branch protection allows workflow
+# Settings → Branches → Edit protection rules
 ```
 
 ### Wrong Version Calculated
 
 ```bash
-# Check VERSION file
+# Check current VERSION
 cat VERSION
 
-# Check branch name pattern
+# Verify branch name pattern
 git branch --show-current
 
-# Check CI logs for version calculation
+# Expected patterns:
+# - feature/name  → MINOR bump
+# - bugfix/name   → PATCH bump  
+# - alpha         → MAJOR bump
+# - hotfix        → PATCH bump
+
+# View CI logs for version calculation
+# GitHub → Actions → Latest run → Calculate Version job
 ```
 
 ### Merge Conflicts in VERSION
 
 ```bash
-# Always use higher version
+# Always choose the higher version
 git checkout --theirs VERSION
+git add VERSION
+git commit
+
+# Or manually edit VERSION to higher number
+echo "1.2.3" > VERSION
 git add VERSION
 git commit
 ```
@@ -267,149 +381,92 @@ git commit
 ### Tag Already Exists
 
 ```bash
-# Delete tag locally and remotely
+# Delete tag locally
 git tag -d v1.0.0
+
+# Delete tag remotely
 git push origin :refs/tags/v1.0.0
 
-# Re-run the merge
+# Force push the corrected commit
+# (Only if safe to do so!)
+git push --force-with-lease
 ```
 
-### CI Fails on Test
+### CI Tests Fail
 
 ```bash
-# Run tests locally
+# Run tests locally first
 npm test
+# or
+python -m pytest
+# or
+cargo test
 
-# Check logs in GitHub Actions
-# Actions → Latest workflow run → Build & Test
+# Check specific job logs
+# GitHub → Actions → Failed run → Click failing job
+
+# Re-run failed jobs
+# GitHub → Actions → Failed run → Re-run failed jobs
 ```
 
----
-
-## Useful Git Commands
+### Branch Protection Blocks Merge
 
 ```bash
-# View all branches
-git branch -a
+# Ensure all required checks pass
+# - Build & Test must be green
+# - Calculate Version must complete
+# - Required reviews must be approved
+# - All conversations must be resolved
 
-# View all tags
-git tag -l
-
-# Fetch latest tags
-git fetch --tags
-
-# View tag details
-git show v1.0.0
-
-# View commit history
-git log --oneline --graph --all
-
-# Sync with upstream
-git fetch upstream
-git merge upstream/alpha
-
-# Squash commits before PR
-git rebase -i HEAD~3
-
-# Undo last commit (keep changes)
-git reset --soft HEAD~1
-
-# View file at specific tag
-git show v1.0.0:VERSION
+# View protection rules
+# Settings → Branches → Branch protection rules
 ```
 
 ---
 
-## Configuration Files
+## 📁 Key Files Reference
 
-### `.github/workflows/ci-cd-versioned.yml`
-Main CI/CD workflow
+| File | Purpose | When to Edit |
+|------|---------|--------------|
+| `VERSION` | Current semantic version | Never manually (auto-updated by CI) |
+| `.github/workflows/ci-cd-versioned.yml` | CI/CD automation | When customizing workflow |
+| `BRANCH_STRATEGY.md` | Branch rules and flows | Reference only |
+| `README.md` | Project overview | Update for your project |
 
-### `VERSION`
-Current version (e.g., `0.1.0`)
-
-### `BRANCH_STRATEGY.md`
-Detailed branch strategy documentation
-
-### `README.md`
-Project overview and documentation
+> **⚠️ Warning**: Never manually edit `VERSION` file unless fixing a CI issue. The workflow manages it automatically.
 
 ---
 
-## Quick Links
+## 🔗 Documentation Links
 
-- [Full Setup Guide](../docs/SETUP_GUIDE.md)
-- [Workflow Examples](../docs/WORKFLOW_EXAMPLES.md)
-- [Customization Guide](../docs/CUSTOMIZATION.md)
-- [Branch Strategy](../BRANCH_STRATEGY.md)
+### Getting Started
+- 🚀 [Quickstart](QUICKSTART.md) - Initial setup (5 minutes)
+- 📘 [Setup Guide](SETUP_GUIDE.md) - Detailed configuration
 
----
+### Daily Usage  
+- ⚡ **Quick Reference** (this page) - Command cheat sheet
+- 📖 [Workflow Examples](WORKFLOW_EXAMPLES.md) - Step-by-step scenarios
+- 🌳 [Branch Strategy](BRANCH_STRATEGY.md) - Branch rules and flows
 
-## Common Workflows
-
-### Release a Feature
-
-```bash
-feature/* → main (via PR) → v0.2.0-beta tag
-main → release (via PR) → v0.2.0 tag + Release
-```
-
-### Release a Hotfix
-
-```bash
-hotfix → release (via PR) → v1.0.1 tag + Release
-# Auto-syncs to main and all active branches
-```
-
-### Major Version Release
-
-```bash
-alpha → main (via PR) → v1.0.0-alpha tag
-# Beta branch created
-beta → main (via PR) → v1.0.0-beta tag
-main → release (via PR) → v1.0.0 tag + Release
-```
+### Advanced
+- 🎨 [Customization Guide](CUSTOMIZATION.md) - Adapt to your needs
+- 📂 [Project Structure](PROJECT_STRUCTURE.md) - File organization
+- 📋 [Summary](SUMMARY.md) - High-level overview
 
 ---
 
-## 📝 Commit Message Conventions
+## 💡 Pro Tips
 
-**Use conventional commits for better organization** (version bumps are determined by the branch being merged, not individual commits):
-
-```mermaid
-flowchart LR
-    feat["feat(auth): add login"]
-    fix["fix(api): handle null"]
-    breaking["feat!(api): redesign"]
-    docs["docs(readme): update"]
-    chore["chore(deps): update"]
-    
-    feat -->|Best Practice| bp1["Use for new features"]
-    fix -->|Best Practice| bp2["Use for bug fixes"]
-    breaking -->|Best Practice| bp3["Use for breaking changes"]
-    docs -->|Best Practice| bp4["Use for documentation"]
-    chore -->|Best Practice| bp5["Use for maintenance"]
-    
-    style feat fill:#2ecc71,color:#fff
-    style fix fill:#f39c12,color:#fff
-    style breaking fill:#e74c3c,color:#fff
-    style docs fill:#95a5a6,color:#fff
-    style chore fill:#95a5a6,color:#fff
-    style bp1 fill:#3498db,color:#fff
-    style bp2 fill:#3498db,color:#fff
-    style bp3 fill:#3498db,color:#fff
-    style bp4 fill:#95a5a6,color:#fff
-    style bp5 fill:#95a5a6,color:#fff
-```
-
-**Important**: Version bumps are determined by **which branch is merged**, not individual commit messages:
-- `feature/*` → main = MINOR bump (regardless of commit messages)
-- `bugfix/*` → main = PATCH bump (regardless of commit messages)
-- `alpha` → main = MAJOR bump (regardless of commit messages)
-- `hotfix` → release = PATCH bump (regardless of commit messages)
-
-Commit messages should follow [Conventional Commits](https://www.conventionalcommits.org/) for clarity and changelog generation, but they don't control versioning.
+1. **Commit Often**: Small, focused commits are easier to review and revert
+2. **Branch Names**: Use descriptive names like `feature/user-authentication` not `feature/fix`
+3. **PR Descriptions**: Link related issues with `Closes #123` or `Fixes #456`
+4. **Review Tags**: Check tags regularly with `git fetch --tags && git tag -l`
+5. **Test Locally**: Always run tests before pushing with `npm test` or equivalent
+6. **Clean Branches**: Delete merged branches to keep repo tidy
+7. **Read CI Logs**: When workflow fails, read the logs - they're usually clear about what's wrong
 
 ---
 
-**Print this guide for quick reference!** 📋
+**📌 Bookmark this page for daily reference!**
+
+

@@ -11,7 +11,7 @@ Complete documentation for setting up and using automated Git versioning and rel
 ### Getting Started
 - **[Quick Start Guide](QUICKSTART.md)** - Get up and running in 10 minutes
 - **[Setup Guide](SETUP_GUIDE.md)** - Complete installation and configuration
-- **[Quick Reference](QUICK_REFERENCE.md)** - Commands and version progression cheat sheet
+- **[Quick Reference](QUICK_REFERENCE.md)** - Daily workflow commands and version cheat sheet (for established projects)
 
 ### Core Concepts
 - **[Branch Strategy](BRANCH_STRATEGY.md)** - Detailed branching model and workflows
@@ -26,7 +26,7 @@ Complete documentation for setting up and using automated Git versioning and rel
 > - **Branch diagrams** in [Branch Strategy](BRANCH_STRATEGY.md)
 > - **Workflow flowcharts** in [Workflow Examples](WORKFLOW_EXAMPLES.md)
 > - **CI/CD architecture** in [Setup Guide](SETUP_GUIDE.md)
-> - **Quick decision tree** in [Quick Reference](QUICK_REFERENCE.md)
+> - **Quick decision tree** in [Quick Reference](QUICK_REFERENCE.md) (for daily usage)
 
 ### Additional Resources
 - **[Summary](SUMMARY.md)** - Quick overview
@@ -167,12 +167,20 @@ This template uses **GitHub Actions** as reference but works with:
 
 ---
 
+## 📄 License
+
+This template is released under the **MIT License** - see [LICENSE](LICENSE) for full details.
+
+You are free to use, modify, and distribute this template in any project (commercial or personal). **Your projects built with this template can use any license you choose.**
+
+---
+
 ## 📞 Need Help?
 
 - 📖 Read the [Setup Guide](SETUP_GUIDE.md)
 - 🐛 Check [GitHub Issues](https://github.com/CodeOOf/Git-Auto-Release/issues)
 - 💬 Join [Discussions](https://github.com/CodeOOf/Git-Auto-Release/discussions)
-- ⚡ Use [Quick Reference](QUICK_REFERENCE.md) for common commands
+- ⚡ Use [Quick Reference](QUICK_REFERENCE.md) for daily workflow commands
 
 ---
 
