@@ -146,25 +146,22 @@ git push origin bugfix/fix-issue
 
 ## Commit Format
 
-Use [Conventional Commits](https://www.conventionalcommits.org/):
+Use structured commit messages for clarity:
 
 ```
-<type>: <description>
+<type>(scope): <description>
 ```
 
-**Types:**
-- `feat:` - New feature (MINOR bump)
-- `fix:` - Bug fix (PATCH bump)
-- `docs:` - Documentation
-- `chore:` - Maintenance
-- `test:` - Tests
+**Example**: `feat(auth): add OAuth2 support`
+
+> 📖 **For detailed commit guidelines, types, and examples**, see [Reference Guide - Commit Message Format](REFERENCE_GUIDE.md#️-commit-message-format)
 
 ---
 
 ## Next Steps
 
+- ⚡ [Reference Guide](REFERENCE_GUIDE.md) - Daily workflow commands and FAQ
 - 📚 [Branch Strategy](BRANCH_STRATEGY.md) - Detailed branching model
-- ⚡ [Quick Reference](QUICK_REFERENCE.md) - Daily workflow commands (after setup)
 - 🎨 [Customization](CUSTOMIZATION.md) - Adapt to your stack
 - 📋 [Workflow Examples](WORKFLOW_EXAMPLES.md) - Real scenarios
 

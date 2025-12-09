@@ -178,17 +178,20 @@ git push origin bugfix/123-fix-login-timeout
 
 ---
 
-## 3. Beta Testing with Bugfixes
+## 3. Major Beta Release with Refinements
 
-**Scenario:** You have `v1.0.0-beta` on main and QA finds bugs during testing
+**Scenario:** You have `v1.0.0-beta` (major beta release from beta branch merge) on main and need to add more changes during testing
 
-This workflow uses build metadata (`.1`, `.2`, etc.) to track bugfixes during beta/alpha testing without changing the base version.
+This workflow uses build metadata (`.1`, `.2`, etc.) to track ANY changes during a **major beta release** without changing the base version. **Important**: During major beta (VERSION = `X.0.0-beta`), ALL merges to main (whether from `feature/*` or `bugfix/*`) result in `.N` increments - no new version bumps are allowed.
+
+**Note**: Regular feature/bugfix merges outside of major beta releases continue to bump versions normally: `v0.2.0-beta`, `v0.3.0-beta`, `v0.1.1-beta`, etc.
 
 ### Initial State
 
 ```bash
 # Current VERSION: 1.0.0-beta
-# A feature was merged, creating v1.0.0-beta tag
+# (This came from beta branch → main merge after alpha → main)
+# Now in major beta release cycle
 ```
 
 ### QA Finds Bug #1
@@ -228,15 +231,26 @@ git push origin bugfix/beta-api-validation
 - VERSION updated to: `1.0.0-beta.2`
 - Build metadata incremented again
 
-### Multiple Beta Fixes
+### Multiple Beta Refinements (During Major Beta)
 
 ```bash
-# Each bugfix/* merge to main during beta/alpha phase:
-# v1.0.0-beta       (initial feature merge)
-# v1.0.0-beta.1     (first bugfix)
-# v1.0.0-beta.2     (second bugfix)
-# v1.0.0-beta.3     (third bugfix)
+# ANY merge to main during MAJOR beta (VERSION = X.0.0-beta) results in .N increments:
+# v1.0.0-beta       (beta branch → main: major beta release starts)
+# v1.0.0-beta.1     (first bugfix/* merge)
+# v1.0.0-beta.2     (second bugfix/* merge)
+# v1.0.0-beta.3     (feature/* merge - NO minor bump, just .N increment!)
+# v1.0.0-beta.4     (another bugfix/* merge)
+# v1.0.0-beta.5     (another feature/* merge - still just .N increment!)
 # ... and so on
+
+# Important: During major beta, no new major/minor bumps allowed!
+# VERSION must stay at X.0.0-beta until released to production.
+# This is because major version bump is the highest increment possible.
+
+# Compare to regular beta tags (outside major release cycle):
+# v0.2.0-beta       (feature/* → main: normal MINOR bump with -beta suffix)
+# v0.3.0-beta       (feature/* → main: normal MINOR bump with -beta suffix)
+# v0.3.1-beta       (bugfix/* → main: normal PATCH bump with -beta suffix)
 ```
 
 ### Release to Production
