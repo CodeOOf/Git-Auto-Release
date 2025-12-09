@@ -40,7 +40,7 @@ This section provides detailed explanations for both setup methods.
 ### Understanding the Template Structure
 
 The template includes:
-- **VERSION file**: Tracks current version (starts at `1.0.0-beta` after alpha merge)
+- **VERSION file**: Tracks current version (e.g., starts at `0.1.0`, becomes `1.0.0-beta` after alpha merge)
 - **README.template.md**: Your project README starter
 - **CONTRIBUTING.template.md**: Contribution guidelines starter
 - **.github/workflows/ci-cd-versioned.yml**: Automated versioning workflow

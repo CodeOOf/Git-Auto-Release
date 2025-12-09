@@ -154,7 +154,7 @@ Use structured commit messages for clarity:
 
 **Example**: `feat(auth): add OAuth2 support`
 
-> 📖 **For detailed commit guidelines, types, and examples**, see [Reference Guide - Commit Message Format](REFERENCE_GUIDE.md#️-commit-message-format)
+> 📖 **For detailed commit guidelines, types, and examples**, see [Reference Guide - Commit Message Format](REFERENCE_GUIDE.md#commit-message-format)
 
 ---
 

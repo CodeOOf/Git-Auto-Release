@@ -1,6 +1,6 @@
 # Customization Guide
 
-📖 **Navigation**: [← README](../README.md) | [Branch Strategy](../BRANCH_STRATEGY.md) | [Workflow Examples](WORKFLOW_EXAMPLES.md) | **Customization Guide** | [Reference Guide →](REFERENCE_GUIDE.md)
+📖 **Navigation**: [← README](README.md) | [Branch Strategy](BRANCH_STRATEGY.md) | [Workflow Examples](WORKFLOW_EXAMPLES.md) | **Customization Guide** | [Reference Guide →](REFERENCE_GUIDE.md)
 
 Learn how to adapt the Git-Auto-Release template to different CI/CD platforms and customize the automation pipeline.
 

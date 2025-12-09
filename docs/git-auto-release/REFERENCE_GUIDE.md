@@ -17,7 +17,7 @@
 - [Quick Decision Tree](#-quick-decision-tree)
 - [Daily Workflow Commands](#-daily-workflow-commands)
 - [Version Progression Cheat Sheet](#-version-progression-cheat-sheet)
-- [Commit Message Format](#️-commit-message-format)
+- [Commit Message Format](#commit-message-format)
 - [Common Git Commands](#️-common-git-commands)
 - [Troubleshooting Quick Fixes](#-troubleshooting-quick-fixes)
 - [Key Files Reference](#-key-files-reference)
@@ -25,7 +25,7 @@
 - [Common Use Cases](#-common-use-cases)
 - [Customization Points](#️-customization-points)
 - [Pro Tips](#-pro-tips)
-- [FAQ](#-frequently-asked-questions)
+- [FAQ](#frequently-asked-questions)
 - [License & Support](#-license--support)
 
 ---

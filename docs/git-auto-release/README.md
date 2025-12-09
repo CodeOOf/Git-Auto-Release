@@ -4,7 +4,7 @@
 
 Complete documentation for setting up and using automated Git versioning and releases.
 
-> **❓ Have questions?** Check the [FAQ in Reference Guide](REFERENCE_GUIDE.md#-frequently-asked-questions)
+> **❓ Have questions?** Check the [FAQ in Reference Guide](REFERENCE_GUIDE.md#frequently-asked-questions)
 
 ---
 
@@ -14,7 +14,7 @@ Complete documentation for setting up and using automated Git versioning and rel
 - **[Quick Start Guide](QUICKSTART.md)** - Get up and running in 10 minutes
 - **[Setup Guide](SETUP_GUIDE.md)** - Complete installation and configuration
 - **[Reference Guide](REFERENCE_GUIDE.md)** - Comprehensive reference with daily workflow commands and version cheat sheet (for established projects)
-  - **[FAQ](REFERENCE_GUIDE.md#-frequently-asked-questions)** - Common questions and troubleshooting
+  - **[FAQ](REFERENCE_GUIDE.md#frequently-asked-questions)** - Common questions and troubleshooting
 
 ### Core Concepts
 - **[Branch Strategy](BRANCH_STRATEGY.md)** - Detailed branching model and workflows

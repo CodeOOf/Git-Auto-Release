@@ -282,7 +282,7 @@ README.md (overview)
 
 1. **.github/workflows/ci-cd-versioned.yml**: Docker builds, deployment steps
 2. **docs/git-auto-release/BRANCH_STRATEGY.md**: Adjust to your team's needs
-3. **VERSION**: Set initial version (default: 1.0.0-beta)
+3. **VERSION**: Set initial version (default: 0.1.0)
 
 ### Usually Keep As-Is
 
