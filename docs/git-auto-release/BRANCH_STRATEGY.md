@@ -132,9 +132,12 @@ The CI/CD pipeline (`.github/workflows/ci-cd-versioned.yml`) **automatically** c
 #### Version Bump Logic
 - **Major bump**: When `alpha` branch merges to `main` → `vX.Y.Z` becomes `vX+1.0.0-alpha` (automatic tag created)
   - Then create `beta` branch from main for stabilization
-  - `beta` → `main` merge adds `-beta` suffix to already-bumped version
+  - `beta` → `main` merge adds `-beta` suffix to already-bumped version → `vX.0.0-beta` (major beta release)
 - **Minor bump**: When `feature/*` branch merges to `main` → `vX.Y.Z` becomes `vX.Y+1.0-beta` (automatic tag)
-- **Patch bump**: When `bugfix/*` merges to `main` or `hotfix` merges to `release` → `vX.Y.Z` becomes `vX.Y.Z+1` (automatic tag)
+- **Patch bump**: When `bugfix/*` merges to `main` or `hotfix` merges to `release` → `vX.Y.Z` becomes `vX.Y.Z+1-beta` (automatic tag)
+- **Build metadata increment (.N)**: During **major beta release** (VERSION = `X.0.0-beta`), ANY merge to main (`feature/*` OR `bugfix/*`) increments build metadata → `vX.0.0-beta.N` (e.g., `v1.0.0-beta.1`, `v1.0.0-beta.2`)
+  - **Important**: During major beta, there can be NO additional major/minor bumps until released
+  - **Alpha merges during major beta are NOT allowed** - breaking changes require releasing current major version first, then starting new major cycle
 
 
 #### VERSION File Usage
@@ -144,8 +147,10 @@ The CI/CD pipeline (`.github/workflows/ci-cd-versioned.yml`) **automatically** c
 - **Note**: `-rc` suffix appears during PRs to `release` branch and is temporarily persisted to VERSION during merge, then becomes clean version
 - **Automatically updated by CI/CD** after successful merges:
   - `alpha` → `main`: VERSION becomes `X+1.0.0-alpha`
-  - `feature/*` → `main`: VERSION becomes `X.Y+1.0-beta`
-  - `bugfix/*` → `main`: VERSION becomes `X.Y.Z+1-beta`
+  - `beta` branch → `main`: VERSION becomes `X.0.0-beta` (major beta release)
+  - `feature/*` → `main`: VERSION becomes `X.Y+1.0-beta` (regular feature beta tag)
+  - `bugfix/*` → `main`: VERSION becomes `X.Y.Z+1-beta` (regular bugfix beta tag)
+  - ANY merge → `main` during **major beta** (VERSION = `X.0.0-beta`): VERSION becomes `X.0.0-beta.N` (build metadata increment)
   - `hotfix` → `release`: VERSION becomes `X.Y.Z+1-rc.N` then `X.Y.Z+1` (clean)
   - `main` → `release`: VERSION becomes `X.Y.Z-rc.N` then `X.Y.Z` (clean)
 - **No manual intervention required** - CI/CD manages VERSION throughout entire release lifecycle
@@ -160,19 +165,23 @@ The CI/CD pipeline (`.github/workflows/ci-cd-versioned.yml`) **automatically** c
 | `beta` (push) | `vX.Y.Z-alpha+SHA` | - | `v1.0.0-alpha+8d92k127` |
 | `beta` (merged to main) | - | `vX.Y.Z-beta` | `v1.0.0-beta` (VERSION becomes 1.0.0-beta) |
 | `feature/*` (push) | `vX.Y.Z+SHA` | - | `v0.1.0+21AF26D3` |
-| `feature/*` (merged to main) | - | `vX.Y+1.0-beta` | `v0.2.0-beta` (VERSION becomes 0.2.0-beta)  |
+| `feature/*` (merged to main) | - | `vX.Y+1.0-beta` | `v0.2.0-beta` (VERSION becomes 0.2.0-beta) **normal version bump**  |
+| `feature/*` (merged to main during major beta) | - | `vX.0.0-beta.N` | `v1.0.0-beta.1` (VERSION becomes 1.0.0-beta.1) **if VERSION=1.0.0-beta** |
 | `bugfix/*` (push) | `vX.Y.Z+SHA` | - | `v0.1.0+21AF26D3` |
-| `bugfix/*` (merged to main) | - | `vX.Y.Z+1-beta` | `v0.1.1-beta` (VERSION becomes 0.1.1-beta) |
+| `bugfix/*` (merged to main) | - | `vX.Y.Z+1-beta` | `v0.1.1-beta` (VERSION becomes 0.1.1-beta) **normal version bump** |
+| `bugfix/*` (merged to main during major beta) | - | `vX.0.0-beta.N` | `v1.0.0-beta.2` (VERSION becomes 1.0.0-beta.2) **if VERSION=1.0.0-beta.N** |
 | `hotfix` (push) | `vX.Y.Z-hotfix.N` | - | `v0.1.0-hotfix.1` |
 | `hotfix` (merged to release) | `vX.Y.Z+1-rc.N` | `vX.Y.Z+1` | `v0.1.1-rc.1` → `v0.1.1` (VERSION becomes 0.1.1-rc.1 -> 0.1.1) |
 | `main` (merged to release) | `vX.Y.Z-rc.N` | `vX.Y.Z` | `v0.1.0-rc.1` → `v0.1.0` (VERSION becomes 0.1.0-rc.1 -> 0.1.0) |
 
 **Version Bumping Philosophy**:
 - **Automatic**: CI/CD detects PR source branch and bumps MAJOR (from `alpha`→main), MINOR (from `feature/*`→main), or PATCH (from `bugfix/*`→main or `hotfix`→release)
+- **Major Beta Rule**: During **major beta release** (VERSION = `X.0.0-beta` from beta branch merge), ALL merges to main (feature OR bugfix) increment build metadata (.N) instead of bumping version - no new major/minor bumps allowed until released to production
+- **Regular Beta Tags**: Feature and bugfix merges outside of major beta releases continue to bump versions normally with `-beta` suffix (e.g., `v0.2.0-beta`, `v0.3.0-beta`, `v0.1.1-beta`)
 - **Automatic**: `VERSION` file updated by CI/CD after every merge to `main` or `release` with appropriate suffix (-alpha, -beta, -rc, or clean)
-- **Build metadata**: SHA and pre-release identifiers appended automatically
+- **Build metadata**: SHA and pre-release identifiers appended automatically; `.N` increments during major beta refinement
 - **Full automation**: No manual VERSION updates needed at any stage
-- **Major flow**: alpha→main auto-bumps and tags vX+1.0.0-alpha, updates VERSION to `X+1.0.0-alpha` → create beta branch → stabilize → beta→main tags vX+1.0.0-beta, updates VERSION to `X+1.0.0-beta` → main→release tags vX+1.0.0, updates VERSION to `X+1.0.0`
+- **Major flow**: alpha→main auto-bumps and tags vX+1.0.0-alpha, updates VERSION to `X+1.0.0-alpha` → create beta branch → stabilize → beta→main tags vX+1.0.0-beta, updates VERSION to `X+1.0.0-beta` → ANY merge to main during beta becomes vX+1.0.0-beta.N → main→release tags vX+1.0.0, updates VERSION to `X+1.0.0`
 
 #### 🎯 Version Bump Decision Tree
 
@@ -390,29 +399,6 @@ git commit -m "fix(api): fixed issues from alpha (FR-01)"
 
 # 9. Push and create PR to main
 git push origin beta
-```
-
----
-
-## Commit Messages
-
-Format: `type(scope): description (REQ-ID)`
-
-**Types**:
-- `feat`: New feature
-- `fix`: Bug fix
-- `docs`: Documentation
-- `test`: Tests
-- `refactor`: Code restructuring
-- `chore`: Maintenance
-
-**Examples**:
-```
-feat(auth): add LDAP authentication mode (FR-02)
-fix(api): handle null JWT claims (SEC-01)
-test(auth): add token expiration tests (SEC-02)
-docs(readme): update deployment instructions
-refactor(auth): simplify mode switching logic
 ```
 
 ---

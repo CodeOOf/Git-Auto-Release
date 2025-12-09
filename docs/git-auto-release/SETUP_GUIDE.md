@@ -1,102 +1,125 @@
 # Setup Guide
 
-📖 **Navigation**: [← README](../README.md) | [Quick Start](../QUICKSTART.md) | **Setup Guide** | [Workflow Examples →](WORKFLOW_EXAMPLES.md)
+📖 **Navigation**: [← README](README.md) | [Quick Start](QUICKSTART.md) | **Setup Guide** | [Workflow Examples →](WORKFLOW_EXAMPLES.md)
 
-Complete step-by-step guide to set up Git Auto Release in your project.
+**Detailed configuration guide for Git Auto Release.**
+
+> 💡 **Just want to get started?** See [Quick Start Guide](QUICKSTART.md) for a 5-minute setup.
+
+This guide provides in-depth setup instructions, advanced configuration options, and platform-specific customizations.
 
 ---
 
 ## Table of Contents
 
-1. [Initial Repository Setup](#1-initial-repository-setup)
-2. [Organize Template Documentation](#2-organize-template-documentation)
+1. [Prerequisites](#1-prerequisites)
+2. [Initial Setup](#2-initial-setup)
 3. [Configure Branch Protection](#3-configure-branch-protection)
-4. [Configure Git Commit Signing](#4-configure-git-commit-signing-optional-but-recommended)
+4. [Configure Git Commit Signing](#4-configure-git-commit-signing-optional)
 5. [Customize the Workflow](#5-customize-the-workflow)
 6. [Test Your Setup](#6-test-your-setup)
 7. [Troubleshooting](#7-troubleshooting)
 
 ---
 
-## 1. Initial Repository Setup
+## 1. Prerequisites
 
-### Option A: Use This Template on GitHub
+- Git installed locally
+- GitHub account (or GitLab/Bitbucket)
+- Basic understanding of Git branches and pull requests
+- Familiarity with GitHub Actions (or equivalent CI/CD)
 
-1. Click **"Use this template"** button on GitHub
-2. Name your new repository
-3. Clone your new repository:
+---
+
+## 2. Initial Setup
+
+> 📚 **For quick setup instructions**, see [Quick Start Guide](QUICKSTART.md).
+
+This section provides detailed explanations for both setup methods.
+
+### Understanding the Template Structure
+
+The template includes:
+- **VERSION file**: Tracks current version (e.g., starts at `0.1.0`, becomes `1.0.0-beta` after alpha merge)
+- **README.template.md**: Your project README starter
+- **CONTRIBUTING.template.md**: Contribution guidelines starter
+- **.github/workflows/ci-cd-versioned.yml**: Automated versioning workflow
+- **docs/git-auto-release/**: All template documentation
+
+### Option A: Use GitHub Template (Recommended)
+
+**Advantages:**
+- ✅ Fastest setup
+- ✅ Preserves all branches automatically
+- ✅ GitHub handles initialization
+
+**Steps:**
+1. Click **"Use this template"** on GitHub
+2. Name your repository
+3. Create repository
+4. Clone locally:
    ```bash
    git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git
    cd YOUR_REPO
    ```
 
-### Option B: Clone and Reinitialize
+### Option B: Manual Clone and Setup
 
+**Advantages:**
+- ✅ Full control over repository initialization
+- ✅ Can customize before first commit
+- ✅ Good for offline or private setups
+
+**Steps:**
 ```bash
-# Clone the template
+# Clone with your project name
 git clone https://github.com/CodeOOf/Git-Auto-Release.git my-project
 cd my-project
 
-# Remove existing git history
+# Remove Git history
 rm -rf .git
 
-# Initialize new repository
-git init
-git add .
-git commit -m "Initial commit from Git Auto Release template"
+# Set initial version
+echo "0.1.0" > VERSION
 
-# Connect to your remote repository
+# Replace template files
+rm README.md CONTRIBUTING.md
+mv README.template.md README.md
+mv CONTRIBUTING.template.md CONTRIBUTING.md
+
+# Edit README.md and CONTRIBUTING.md with your project details
+
+# Initialize Git
+git init
+git checkout -b main
+git add .
+git commit -m "chore: initialize project from Git-Auto-Release template"
+
+# Add remote and push
 git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO.git
 git push -u origin main
+
+# Create release branch
+git checkout -b release
+git push -u origin release
+git checkout main
 ```
 
----
+### Customize Your Project Files
 
-## 2. Organize Template Documentation
+After setup, edit these files:
 
-**Make this template your own by separating template docs from your project docs.**
+**README.md:**
+- Project name and description
+- Installation instructions
+- Usage examples
+- Link to template docs: `docs/git-auto-release/`
 
-### Move Template Documentation
-
-```bash
-# Create template documentation folder
-mkdir -p docs/git-auto-release
-
-# Move template files
-mv README.md docs/git-auto-release/
-mv QUICKSTART.md docs/git-auto-release/
-mv BRANCH_STRATEGY.md docs/git-auto-release/
-
-# Setup and workflow docs are already in docs/, move them too
-mv docs/SETUP_GUIDE.md docs/git-auto-release/
-mv docs/WORKFLOW_EXAMPLES.md docs/git-auto-release/
-mv docs/CUSTOMIZATION.md docs/git-auto-release/
-mv docs/QUICK_REFERENCE.md docs/git-auto-release/
-
-# Optional: Move contributing guide
-mv CONTRIBUTING.md docs/git-auto-release/ 2>/dev/null || true
-
-# Use the project README template
-mv README.template.md README.md
-
-# Commit the reorganization
-git add .
-git commit -m "chore: organize template documentation"
-git push
-```
-
-### Customize Your Project README
-
-Edit `README.md` with:
-- Your project name and description
-- Project-specific setup instructions
-- Links to your documentation
-- Reference to version automation: `docs/git-auto-release/README.md`
-
-**Result:** Template documentation is now isolated in `docs/git-auto-release/`. You can:
-- Keep it for team reference
-- Move it to `docs/archive/` later
-- Delete it once familiar with the workflow
+**CONTRIBUTING.md:**
+- Contribution guidelines
+- Code of conduct
+- Development setup
+- Commit message conventions
 
 ---
 
@@ -125,108 +148,108 @@ graph TB
     style release fill:#e74c3c,color:#fff
 ```
 
+## 3. Configure Branch Protection
+
+> 📚 **Quick setup**: See [Quick Start Guide - Branch Protection](QUICKSTART.md#step-2-branch-protection-2-min) for basic configuration.
+
+This section provides detailed protection rules and platform-specific instructions.
+
+**Protect your branches to ensure code quality and version control integrity.**
+
+### 🔐 Branch Protection Overview
+
+**Visual representation of recommended protection levels:**
+
+```mermaid
+graph TB
+    feature[feature/my-feature<br/>No protection<br/>✅ Push directly]
+    bugfix[bugfix/my-fix<br/>No protection<br/>✅ Push directly]
+    alpha[alpha<br/>Optional protection<br/>Status checks recommended]
+    beta[beta<br/>Auto-created<br/>No direct commits]
+    main[main<br/>✅ Protected<br/>✅ Require PR<br/>⭐ 1 Approval<br/>✅ Status checks]
+    release[release<br/>✅✅ Highly Protected<br/>✅ Require PR<br/>⭐⭐ 2 Approvals<br/>✅ Status checks]
+    
+    feature -->|PR| main
+    bugfix -->|PR| main
+    alpha -->|PR| main
+    beta -->|PR| main
+    main -->|PR| release
+    
+    style feature fill:#2ecc71,color:#fff
+    style bugfix fill:#2ecc71,color:#fff
+    style alpha fill:#9b59b6,color:#fff
+    style beta fill:#3498db,color:#fff
+    style main fill:#3498db,color:#fff
+    style release fill:#e74c3c,color:#fff
+```
+
 **Protection Levels:**
-- **feature/** branches: No protection (development freedom)
-- **alpha**: Optional protection with status checks
+- **feature/**, **bugfix/** branches: No protection (development freedom)
+- **alpha**: Optional protection with status checks (for breaking changes)
+- **beta**: Auto-created from main, no direct commits
 - **main**: Protected with 1 approval, all status checks required
-- **release**: Highly protected with 2 approvals, critical status checks
+- **release**: Highly protected with 2 approvals, production-ready
 
 ---
 
-Navigate to your repository's branch protection settings (location varies by platform):
+### Platform-Specific Setup
+
+Navigate to branch protection settings:
 - **GitHub**: Settings → Branches → Add branch protection rule
 - **GitLab**: Settings → Repository → Protected Branches
 - **Bitbucket**: Repository Settings → Branch Permissions
 
-### Set Your Initial Version
-
-Edit the `VERSION` file:
-
-```bash
-echo "0.1.0" > VERSION
-git add VERSION
-git commit -m "chore: set initial version to 0.1.0"
-git push
-```
-
-### Create Required Branches
-
-```bash
-# Create and push release branch
-git checkout main
-git checkout -b release
-git push -u origin release
-
-# Return to main
-git checkout main
-```
-
-**Note**: The `alpha` and `beta` branches are optional and only needed when working on breaking changes (MAJOR version bumps). Create them when needed:
-
-```bash
-# Only create alpha/beta when working on breaking changes
-git checkout main
-git checkout -b alpha
-git push -u origin alpha
-```
-
 ### Protect the `main` Branch
 
-Configure the following for `main` branch:
+**Rule name/pattern:** `main`
 
-   **Pull Request/Merge Request Settings:**
-   - ✅ **Require a pull/merge request before merging**
-   - ✅ **Require approvals**: 1+
-   - ✅ **Dismiss stale approvals when new commits are pushed** (if available)
-   - ✅ **Require approval of the most recent reviewable push** (if available)
+**Required settings:**
+- ✅ **Require pull request before merging**
+- ✅ **Require approvals**: 1
+- ✅ **Require status checks to pass**
+  - Required checks:
+    - `Build & Test` (placeholder job)
+    - `Calculate Version` (from version job)
+- ✅ **Require branches to be up to date**
+- ✅ **Require conversation resolution before merging**
+- ✅ **Do not allow bypassing settings**
 
-   **Status Checks:**
-   - ✅ **Require status checks to pass before merging**
-   - ✅ **Require branches to be up to date before merging**
-   - Add required checks (adjust names based on your CI/CD setup):
-     - `Build & Test`
-     - `Calculate Version`
-
-   **Additional Settings:**
-   - ✅ **Require conversation resolution before merging**
-   - ✅ **Do not allow bypassing the above settings**
-
-6. Click **Create**
+**Optional but recommended:**
+- ✅ **Dismiss stale approvals when new commits pushed**
+- ✅ **Require approval of most recent push**
 
 ### Protect the `release` Branch
 
-1. Click **Add branch protection rule** again
-2. Branch name pattern: `release`
-3. Configure the following:
+**Rule name/pattern:** `release`
 
-   **Pull Request Settings:**
-   - ✅ **Require a pull request before merging**
-   - ✅ **Require approvals**: 2 (higher for production)
-   - ✅ **Dismiss stale pull request approvals when new commits are pushed**
+**Required settings:**
+- ✅ **Require pull request before merging**
+- ✅ **Require approvals**: 2 (higher for production)
+- ✅ **Require status checks to pass**
+  - Required checks:
+    - `Calculate Version`
+- ✅ **Require branches to be up to date**  
+- ✅ **Require conversation resolution**
+- ✅ **Do not allow bypassing settings**
 
-   **Status Checks:**
-   - ✅ **Require status checks to pass before merging**
-   - ✅ **Require branches to be up to date before merging**
-   - Add required checks:
-     - `Calculate Version`
-
-   **Additional Settings:**
-   - ✅ **Require conversation resolution before merging**
-   - ✅ **Do not allow bypassing the above settings**
-
-4. Click **Create**
+**Additional protection:**
+- ✅ **Dismiss stale approvals when new commits pushed**
+- ✅ **Restrict who can push** (optional: only maintainers)
 
 ### Optional: Protect `alpha` Branch
 
-For stricter control over pre-release code:
+For stricter control over breaking changes:
 
-1. Add protection for `alpha`
-2. **Require status checks**: `Build & Test`
-3. Consider requiring 1 approval for feature merges
+**Rule name/pattern:** `alpha`
+
+**Settings:**
+- ✅ **Require status checks**: `Build & Test`
+- Consider requiring 1 approval for feature merges
+- Useful for teams working on major version changes
 
 ---
 
-## 4. Configure Git Commit Signing (Optional but Recommended)
+## 4. Configure Git Commit Signing (Optional)
 
 Secure your commits with GPG signing for better traceability and security.
 

@@ -4,17 +4,25 @@
 Git-Auto-Release/
 ├── .github/
 │   └── workflows/
-│       └── ci-cd-versioned.yml    # Main CI/CD workflow
+│       └── ci-cd-versioned.yml          # Main CI/CD workflow
 ├── docs/
-│   ├── README.md                  # Documentation index
-│   ├── SETUP_GUIDE.md            # Complete setup instructions
-│   ├── WORKFLOW_EXAMPLES.md      # Real-world usage examples
-│   ├── CUSTOMIZATION.md          # How to customize the template
-│   └── QUICK_REFERENCE.md        # Fast command reference
-├── BRANCH_STRATEGY.md            # Detailed branch strategy
-├── LICENSE                       # MIT License
-├── README.md                     # Main project documentation
-└── VERSION                       # Current version (e.g., 0.1.0)
+│   └── git-auto-release/
+│       ├── BRANCH_STRATEGY.md           # Detailed branch strategy
+│       ├── CUSTOMIZATION.md             # How to customize the template
+│       ├── LICENSE                      # MIT License (template license)
+│       ├── PROJECT_STRUCTURE.md         # This file - project structure guide
+│       ├── QUICKSTART.md                # 5-minute initial setup guide
+│       ├── README.md                    # Documentation index
+│       ├── REFERENCE_GUIDE.md           # Comprehensive reference guide
+│       ├── SETUP_GUIDE.md               # Complete setup instructions
+│       └── WORKFLOW_EXAMPLES.md         # Real-world usage examples
+├── CHECKLIST.md                         # Pre-release checklist
+├── CONTRIBUTING.md                      # Contribution guidelines
+├── CONTRIBUTING.template.md             # Template for user projects
+├── LICENSE                              # MIT License (repository license)
+├── README.md                            # Main project documentation
+├── README.template.md                   # Template for user projects
+└── VERSION                              # Current version (e.g., 1.0.0-beta)
 ```
 
 ---
@@ -39,15 +47,24 @@ Git-Auto-Release/
   - Setup instructions
   - FAQ
 
-#### `BRANCH_STRATEGY.md`
-- **Purpose**: Detailed branch strategy documentation
+#### `CHECKLIST.md`
+- **Purpose**: Pre-release checklist
+- **Location**: Root directory
+- **Usage**: Verify all steps before major releases
+
+#### `CONTRIBUTING.md` & `CONTRIBUTING.template.md`
+- **Purpose**: Contribution guidelines (template provides starting point for user projects)
+- **Location**: Root directory
 - **Contents**:
-  - Branch types and purposes
-  - Version bump logic
-  - Release flows (major, minor, patch, hotfix)
-  - Mermaid diagrams
-  - Commit message conventions
-  - Workflow details
+  - Code of conduct
+  - Development workflow
+  - PR process
+  - Branch strategy reference
+
+#### `README.template.md`
+- **Purpose**: Template README for user projects
+- **Location**: Root directory
+- **Usage**: Copy and customize for your project
 
 #### `LICENSE`
 - **Purpose**: MIT License
@@ -122,33 +139,54 @@ Git-Auto-Release/
   - Deployment integration
   - Branch strategy adjustments
 
-#### `QUICK_REFERENCE.md`
-- **Purpose**: Fast command reference
+#### `QUICKSTART.md`
+- **Purpose**: Fast 5-minute initial setup guide
+- **Location**: docs/git-auto-release/
 - **Contents**:
-  - Common commands
+  - Quick repository setup
+  - Essential commands
+  - Basic commit format
+  - Next steps
+- **Note**: For daily usage reference, see `REFERENCE_GUIDE.md`
+
+#### `REFERENCE_GUIDE.md`
+- **Purpose**: Comprehensive reference guide (for established projects)
+- **Location**: docs/git-auto-release/
+- **Contents**:
+  - What is this template?
+  - Key features and use cases
+  - Decision tree for daily tasks
+  - Workflow commands (feature, bugfix, hotfix, release)
   - Version progression tables
-  - Commit message formats
-  - Troubleshooting commands
-  - Quick links
+  - Commit message format (Conventional Commits)
+  - Git command reference
+  - Troubleshooting quick fixes
+  - FAQ (13+ common questions)
+  - Customization points
+  - License & support
 
----
-
-#### `Dockerfile`
-- **Purpose**: Example Docker configuration
-- **Usage**: Copy and customize for your application
-
-#### `.gitignore`
-- **Purpose**: Recommended Git ignore patterns
-- **Usage**: Copy to your project root
-
-#### `CONTRIBUTING.md`
-- **Purpose**: Template for contribution guidelines
+#### `BRANCH_STRATEGY.md`
+- **Purpose**: Detailed branch strategy documentation
+- **Location**: docs/git-auto-release/
 - **Contents**:
-  - Code of conduct
-  - Development workflow
-  - Commit message guidelines
-  - PR process
-  - Branch strategy for contributors
+  - Branch types and purposes
+  - Version bump logic
+  - Release flows (major, minor, patch, hotfix)
+  - Mermaid diagrams
+  - Workflow details
+- **Note**: Commit message conventions are in `REFERENCE_GUIDE.md`
+
+#### `PROJECT_STRUCTURE.md`
+- **Purpose**: This file - explains project organization
+- **Location**: docs/git-auto-release/
+- **Contents**: File structure, descriptions, and relationships
+
+#### `LICENSE`
+- **Purpose**: MIT License for the template itself
+- **Location**: docs/git-auto-release/
+- **Note**: Your projects can use any license you choose
+
+
 
 ---
 
@@ -191,12 +229,16 @@ GitHub Releases (artifacts)
 ```
 README.md (overview)
     ├── Quick start
-    ├── → BRANCH_STRATEGY.md (detailed strategy)
-    └── → docs/
-        ├── SETUP_GUIDE.md (how to set up)
-        ├── WORKFLOW_EXAMPLES.md (how to use)
-        ├── CUSTOMIZATION.md (how to customize)
-        └── QUICK_REFERENCE.md (fast reference)
+    └── → docs/git-auto-release/
+        ├── README.md (documentation index)
+        ├── QUICKSTART.md (5-minute setup)
+        ├── REFERENCE_GUIDE.md (comprehensive reference + FAQ)
+        ├── BRANCH_STRATEGY.md (detailed strategy)
+        ├── SETUP_GUIDE.md (detailed configuration)
+        ├── WORKFLOW_EXAMPLES.md (step-by-step scenarios)
+        ├── CUSTOMIZATION.md (advanced customization)
+        ├── PROJECT_STRUCTURE.md (this file)
+        └── LICENSE (template license)
 ```
 
 ---
@@ -206,23 +248,25 @@ README.md (overview)
 ### For Template Users
 
 1. **Read**: `README.md` for overview
-2. **Follow**: `docs/SETUP_GUIDE.md` for setup
-3. **Reference**: `docs/QUICK_REFERENCE.md` for daily use
-4. **Customize**: `.github/workflows/ci-cd-versioned.yml`
+2. **Setup**: `docs/git-auto-release/QUICKSTART.md` for fast initial setup (5 min)
+3. **Reference**: `docs/git-auto-release/REFERENCE_GUIDE.md` for daily commands and FAQ
+4. **Configure**: `docs/git-auto-release/SETUP_GUIDE.md` for detailed configuration
+5. **Customize**: `.github/workflows/ci-cd-versioned.yml` as needed
 
 ### For Contributors
 
-1. **Read**: `CONTRIBUTING.md`
-2. **Reference**: `BRANCH_STRATEGY.md`
-3. **Follow**: Commit conventions
-4. **Use**: `docs/QUICK_REFERENCE.md` for commands
+1. **Read**: `CONTRIBUTING.md` (root directory)
+2. **Reference**: `docs/git-auto-release/BRANCH_STRATEGY.md`
+3. **Follow**: Commit conventions in `docs/git-auto-release/REFERENCE_GUIDE.md`
+4. **Use**: `docs/git-auto-release/REFERENCE_GUIDE.md` for daily commands
 
 ### For Maintainers
 
-1. **Understand**: `BRANCH_STRATEGY.md` thoroughly
+1. **Understand**: `docs/git-auto-release/BRANCH_STRATEGY.md` thoroughly
 2. **Monitor**: GitHub Actions workflows
 3. **Review**: PRs according to strategy
 4. **Manage**: VERSION file (automatic)
+5. **Check**: `CHECKLIST.md` before major releases
 
 ---
 
@@ -230,15 +274,15 @@ README.md (overview)
 
 ### Must Customize
 
-1. **README.md**: Update project name, description, badges
-2. **ci-cd-versioned.yml**: Adjust build/test commands
-3. **CONTRIBUTING.md**: Update project-specific details
+1. **README.md**: Use `README.template.md` as starting point
+2. **.github/workflows/ci-cd-versioned.yml**: Adjust build/test commands
+3. **CONTRIBUTING.md**: Use `CONTRIBUTING.template.md` for your project
 
 ### Optional Customization
 
-1. **ci-cd-versioned.yml**: Docker builds, deployment steps
-2. **BRANCH_STRATEGY.md**: Adjust to your team's needs
-3. **VERSION**: Set initial version
+1. **.github/workflows/ci-cd-versioned.yml**: Docker builds, deployment steps
+2. **docs/git-auto-release/BRANCH_STRATEGY.md**: Adjust to your team's needs
+3. **VERSION**: Set initial version (default: 0.1.0)
 
 ### Usually Keep As-Is
 
@@ -259,13 +303,14 @@ README.md (overview)
 ### Updated by Maintainers
 
 - `README.md` - Project-specific updates
-- `BRANCH_STRATEGY.md` - Strategy adjustments
-- `docs/*.md` - Documentation improvements
-- `ci-cd-versioned.yml` - Workflow enhancements
+- `docs/git-auto-release/*.md` - Documentation improvements
+- `.github/workflows/ci-cd-versioned.yml` - Workflow enhancements
+- `CHECKLIST.md` - Pre-release checklist updates
 
 ### Updated by Contributors
 
-- `docs/*.md` - Documentation fixes/improvements
+- `docs/git-auto-release/*.md` - Documentation fixes/improvements
+- `CONTRIBUTING.md` - Contribution guideline improvements
 
 ---
 
@@ -273,9 +318,10 @@ README.md (overview)
 
 ### Adding New Documentation
 
-1. Create file in `docs/`
-2. Link from `docs/README.md`
+1. Create file in `docs/git-auto-release/`
+2. Link from `docs/git-auto-release/README.md`
 3. Link from main `README.md` if relevant
+4. Update `PROJECT_STRUCTURE.md` to document it
 
 ### Adding New Workflows
 
@@ -296,10 +342,13 @@ README.md (overview)
 
 ## Quick Navigation
 
-- **Getting Started**: [README.md](../README.md)
-- **Setup**: [docs/SETUP_GUIDE.md](SETUP_GUIDE.md)
-- **Customization**: [docs/CUSTOMIZATION.md](CUSTOMIZATION.md)
-- **Quick Reference**: [docs/QUICK_REFERENCE.md](QUICK_REFERENCE.md)
+- **Getting Started**: [README.md](../../README.md) - Main overview
+- **Documentation Index**: [docs/git-auto-release/README.md](README.md)
+- **Fast Setup**: [QUICKSTART.md](QUICKSTART.md) - 5 minute setup
+- **Daily Usage**: [REFERENCE_GUIDE.md](REFERENCE_GUIDE.md) - Comprehensive reference + FAQ
+- **Branch Strategy**: [BRANCH_STRATEGY.md](BRANCH_STRATEGY.md) - Detailed branching model
+- **Detailed Setup**: [SETUP_GUIDE.md](SETUP_GUIDE.md) - Full configuration
+- **Customization**: [CUSTOMIZATION.md](CUSTOMIZATION.md) - Advanced topics
 
 ---
 
