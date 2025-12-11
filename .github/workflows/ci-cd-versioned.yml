@@ -11,10 +11,53 @@ on:
       - release
 
 jobs:
+  # Policy check: Ensure no direct commits to main
+  policy-check:
+    name: Policy Validation
+    runs-on: ubuntu-latest
+    if: github.ref_name == 'main' && github.event_name == 'push'
+    continue-on-error: true
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      
+      - name: Check for direct commits to main
+        run: |
+          # Check if this is a merge commit (has 2 parents)
+          if git rev-parse HEAD^2 &>/dev/null; then
+            echo "✅ This is a merge commit (allowed)"
+            exit 0
+          fi
+          
+          # Check if commit message contains PR number (squash merge)
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+          if echo "$COMMIT_MSG" | grep -qE '\(#[0-9]+\)|#[0-9]+'; then
+            echo "✅ This is a squash merge from PR (allowed)"
+            exit 0
+          fi
+          
+          # This is a direct commit to main
+          echo "❌ POLICY VIOLATION: Direct commit to main detected"
+          echo "⚠️  All changes to main must go through PRs from feature/bugfix/alpha/beta branches"
+          echo "⚠️  Direct commits to main are NOT ALLOWED"
+          echo ""
+          echo "📝 Commit message: $COMMIT_MSG"
+          echo "👤 Commit author: $(git log -1 --pretty=format:'%an <%ae>')"
+          echo ""
+          echo "::error::POLICY VIOLATION: Direct commit to main is not allowed"
+          exit 1
+
   # Calculate version based on branch and commit
   version:
     name: Calculate Version
     runs-on: ubuntu-latest
+    needs: [policy-check]
+    if: always()
+    permissions:
+      contents: read
+      pull-requests: read
     outputs:
       version: ${{ steps.semver.outputs.version }}
       tag: ${{ steps.semver.outputs.tag }}
@@ -25,6 +68,12 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Full history for version calculation
+      
+      - name: Install jq for JSON parsing
+        run: |
+          if ! command -v jq &> /dev/null; then
+            sudo apt-get update && sudo apt-get install -y jq
+          fi
       
       - name: Read base version
         id: base_version
@@ -39,11 +88,21 @@ jobs:
         id: semver
         run: |
           BASE_VERSION="${{ steps.base_version.outputs.version }}"
-          BRANCH_NAME="${{ github.ref_name }}"
+          # For PRs, use the source branch (head ref), otherwise use current branch
+          if [ -n "${{ github.event.pull_request.head.ref }}" ]; then
+            BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
+          else
+            BRANCH_NAME="${{ github.ref_name }}"
+          fi
           SHORT_SHA="${GITHUB_SHA:0:8}"
           PR_NUMBER="${{ github.event.pull_request.number }}"
           PR_SOURCE="${{ github.event.pull_request.head.ref }}"
           PR_TARGET="${{ github.event.pull_request.base.ref }}"
+          
+          # Debug output
+          echo "🔍 Event: ${{ github.event_name }}"
+          echo "🔍 PR_SOURCE: ${PR_SOURCE:-empty}"
+          echo "🔍 BRANCH_NAME: ${BRANCH_NAME}"
           
           # Extract version components (handle pre-release suffixes like -alpha, -beta, -rc)
           # Remove any suffix after - or + to get base X.Y.Z
@@ -59,7 +118,14 @@ jobs:
           fi
           
           # Determine version based on branch strategy and PR context
-          case "$BRANCH_NAME" in
+          # For PRs, check the target branch; for pushes, check the current branch
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            TARGET_BRANCH="${PR_TARGET}"
+          else
+            TARGET_BRANCH="${BRANCH_NAME}"
+          fi
+          
+          case "$TARGET_BRANCH" in
             release)
               if [ "${{ github.event_name }}" = "pull_request" ]; then
                 # PR to release: vX.Y.Z-rc.N (release candidate)
@@ -78,42 +144,51 @@ jobs:
             main)
               if [ "${{ github.event_name }}" = "pull_request" ]; then
                 # PR to main: Calculate version for validation
-                case "$PR_SOURCE" in
+                # Use BRANCH_NAME as fallback if PR_SOURCE is empty
+                SOURCE_BRANCH="${PR_SOURCE:-$BRANCH_NAME}"
+                echo "🔍 Source branch for PR: ${SOURCE_BRANCH}"
+                
+                case "$SOURCE_BRANCH" in
                   alpha)
                     # Merge from alpha = MAJOR bump
                     NEXT_MAJOR=$((MAJOR + 1))
                     VERSION="${NEXT_MAJOR}.0.0-alpha"
                     ;;
                   feature/*)
-                    # Merge from feature = MINOR bump
-                    NEXT_MINOR=$((MINOR + 1))
-                    VERSION="${MAJOR}.${NEXT_MINOR}.0-beta"
+                    # Merge from feature = MINOR bump (unless in major alpha/beta)
+                    # Check if we're in major alpha release (VERSION = X.0.0-alpha)
+                    if [[ "$BASE_VERSION" =~ ^[0-9]+\.0\.0-alpha ]]; then
+                      # Major alpha: show current VERSION+SHA for PR (strip .N suffix)
+                      CLEAN_VERSION="${BASE_VERSION%.*}"  # Remove .N if present
+                      VERSION="${CLEAN_VERSION}+${SHORT_SHA}"
+                    # Check if we're in major beta release (VERSION = X.0.0-beta)
+                    elif [[ "$BASE_VERSION" =~ ^[0-9]+\.0\.0-beta ]]; then
+                      # Major beta: show current VERSION+SHA for PR (strip .N suffix)
+                      CLEAN_VERSION="${BASE_VERSION%.*}"  # Remove .N if present
+                      VERSION="${CLEAN_VERSION}+${SHORT_SHA}"
+                    else
+                      # Regular development: MINOR bump (same as merge result)
+                      NEXT_MINOR=$((MINOR + 1))
+                      VERSION="${MAJOR}.${NEXT_MINOR}.0-beta"
+                    fi
                     ;;
                   bugfix/*)
-                    # Merge from bugfix during beta = increment build metadata
-                    # Check if current version has -beta or -alpha suffix
-                    if [[ "$BASE_VERSION" =~ -beta ]]; then
-                      # Extract existing build number if present
-                      if [[ "$BASE_VERSION" =~ \.([0-9]+)$ ]]; then
-                        CURRENT_BUILD="${BASH_REMATCH[1]}"
-                        NEXT_BUILD=$((CURRENT_BUILD + 1))
-                      else
-                        NEXT_BUILD="1"
-                      fi
-                      VERSION="${MAJOR}.${MINOR}.${PATCH}-beta.${NEXT_BUILD}"
-                    elif [[ "$BASE_VERSION" =~ -alpha ]]; then
-                      # Extract existing build number if present
-                      if [[ "$BASE_VERSION" =~ \.([0-9]+)$ ]]; then
-                        CURRENT_BUILD="${BASH_REMATCH[1]}"
-                        NEXT_BUILD=$((CURRENT_BUILD + 1))
-                      else
-                        NEXT_BUILD="1"
-                      fi
-                      VERSION="${MAJOR}.${MINOR}.${PATCH}-alpha.${NEXT_BUILD}"
+                    # Merge from bugfix = PATCH bump or .N increment during major alpha/beta
+                    # Check if we're in major alpha release (VERSION = X.0.0-alpha)
+                    if [[ "$BASE_VERSION" =~ ^[0-9]+\.0\.0-alpha ]]; then
+                      # Major alpha: show current VERSION+SHA for PR (strip .N suffix)
+                      CLEAN_VERSION="${BASE_VERSION%.*}"  # Remove .N if present
+                      VERSION="${CLEAN_VERSION}+${SHORT_SHA}"
+                    # Check if we're in major beta release (VERSION = X.0.0-beta)
+                    elif [[ "$BASE_VERSION" =~ ^[0-9]+\.0\.0-beta ]]; then
+                      # Major beta: show current VERSION+SHA for PR (strip .N suffix)
+                      CLEAN_VERSION="${BASE_VERSION%.*}"  # Remove .N if present
+                      VERSION="${CLEAN_VERSION}+${SHORT_SHA}"
                     else
-                      # Not in beta/alpha phase, do PATCH bump
-                      NEXT_PATCH=$((PATCH + 1))
-                      VERSION="${MAJOR}.${MINOR}.${NEXT_PATCH}-beta"
+                      # Regular development: show preview version (no PATCH bump yet)
+                      BUGFIX_COUNT=$(git log --oneline --grep="^fix" --grep="^bugfix" origin/main..HEAD | wc -l)
+                      BUGFIX_NUM=$((BUGFIX_COUNT > 0 ? BUGFIX_COUNT : 1))
+                      VERSION="${MAJOR}.${MINOR}.${PATCH}-bugfix.${BUGFIX_NUM}"
                     fi
                     ;;
                   beta)
@@ -134,56 +209,105 @@ jobs:
                 if git rev-parse HEAD^2 &>/dev/null; then
                   # This is a merge commit (has 2 parents)
                   MERGE_COMMIT_PARENT=$(git rev-parse HEAD^2)
+                  echo "🔍 Merge commit detected, checking parent: $MERGE_COMMIT_PARENT"
                   
                   # Check which branches contain this commit
                   # The source branch should contain the second parent
+                  BRANCHES_WITH_COMMIT=$(git branch -r --contains "$MERGE_COMMIT_PARENT" 2>/dev/null || echo "")
+                  echo "🔍 Branches containing commit: $BRANCHES_WITH_COMMIT"
                   
                   # Check if commit came from alpha
-                  if git branch -r --contains "$MERGE_COMMIT_PARENT" | grep -q "origin/alpha"; then
+                  if echo "$BRANCHES_WITH_COMMIT" | grep -q "origin/alpha"; then
                     BRANCH_TYPE="alpha"
+                    echo "✅ Detected alpha branch from merge commit"
                   # Check if commit came from beta
-                  elif git branch -r --contains "$MERGE_COMMIT_PARENT" | grep -q "origin/beta"; then
+                  elif echo "$BRANCHES_WITH_COMMIT" | grep -q "origin/beta"; then
                     BRANCH_TYPE="beta"
+                    echo "✅ Detected beta branch from merge commit"
                   # Check if commit came from feature/*
-                  elif git branch -r --contains "$MERGE_COMMIT_PARENT" | grep -q "origin/feature/"; then
+                  elif echo "$BRANCHES_WITH_COMMIT" | grep -q "origin/feature/"; then
                     BRANCH_TYPE="feature"
+                    echo "✅ Detected feature/* branch from merge commit"
                   # Check if commit came from bugfix/*
-                  elif git branch -r --contains "$MERGE_COMMIT_PARENT" | grep -q "origin/bugfix/"; then
+                  elif echo "$BRANCHES_WITH_COMMIT" | grep -q "origin/bugfix/"; then
                     BRANCH_TYPE="bugfix"
+                    echo "✅ Detected bugfix/* branch from merge commit"
                   fi
+                else
+                  echo "🔍 Not a merge commit (squash merge), will use API fallback"
                 fi
                 
                 # If not a merge commit or branch not found, check for squash merge via API
                 if [ -z "$BRANCH_TYPE" ]; then
                   MERGE_COMMIT_MSG=$(git log -1 --pretty=%B)
+                  echo "📝 Merge commit message: $MERGE_COMMIT_MSG"
+                  
+                  # Try multiple PR number extraction patterns
                   PR_NUMBER=$(echo "$MERGE_COMMIT_MSG" | grep -oP '\(#\K[0-9]+(?=\))' || echo "")
+                  if [ -z "$PR_NUMBER" ]; then
+                    PR_NUMBER=$(echo "$MERGE_COMMIT_MSG" | grep -oP '#\K[0-9]+' | head -1 || echo "")
+                  fi
                   
                   if [ -n "$PR_NUMBER" ]; then
                     echo "🔍 Detected PR #${PR_NUMBER}, querying GitHub API for source branch..."
                     PR_INFO=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
                       "https://api.github.com/repos/${{ github.repository }}/pulls/$PR_NUMBER")
-                    LAST_PR_BRANCH=$(echo "$PR_INFO" | grep -oP '"ref":\s*"\K[^"]+' | head -1)
                     
-                    if [[ "$LAST_PR_BRANCH" == "alpha" ]]; then
-                      BRANCH_TYPE="alpha"
-                    elif [[ "$LAST_PR_BRANCH" == "beta" ]]; then
-                      BRANCH_TYPE="beta"
-                    elif [[ "$LAST_PR_BRANCH" =~ ^feature/ ]]; then
-                      BRANCH_TYPE="feature"
-                    elif [[ "$LAST_PR_BRANCH" =~ ^bugfix/ ]]; then
-                      BRANCH_TYPE="bugfix"
+                    # Check if API call was successful
+                    if echo "$PR_INFO" | grep -q '"message".*"Resource not accessible'; then
+                      echo "❌ API access denied. Workflow requires 'pull-requests: read' permission"
+                      echo "🔍 PR API response: $(echo "$PR_INFO" | head -c 200)"
+                      echo "❌ Cannot determine source branch type without API access"
+                    else
+                      # Debug: Show PR info head
+                      echo "🔍 PR API response (first 500 chars): $(echo "$PR_INFO" | head -c 500)"
+                      
+                      # Extract head ref (source branch)
+                      LAST_PR_BRANCH=$(echo "$PR_INFO" | jq -r '.head.ref' 2>/dev/null || echo "")
+                      
+                      # Fallback to grep if jq fails
+                      if [ -z "$LAST_PR_BRANCH" ] || [ "$LAST_PR_BRANCH" = "null" ]; then
+                        LAST_PR_BRANCH=$(echo "$PR_INFO" | grep -oP '"ref":\s*"\K[^"]+' | head -1)
+                      fi
+                      
+                      echo "🔍 Extracted source branch: '${LAST_PR_BRANCH}'"
+                      
+                      if [[ "$LAST_PR_BRANCH" == "alpha" ]]; then
+                        BRANCH_TYPE="alpha"
+                      elif [[ "$LAST_PR_BRANCH" == "beta" ]]; then
+                        BRANCH_TYPE="beta"
+                      elif [[ "$LAST_PR_BRANCH" =~ ^feature/ ]]; then
+                        BRANCH_TYPE="feature"
+                      elif [[ "$LAST_PR_BRANCH" =~ ^bugfix/ ]]; then
+                        BRANCH_TYPE="bugfix"
+                      fi
+                      
+                      echo "✅ Source branch from API: ${LAST_PR_BRANCH} -> type: ${BRANCH_TYPE}"
                     fi
-                    
-                    echo "✅ Source branch from API: ${LAST_PR_BRANCH} -> type: ${BRANCH_TYPE}"
+                  else
+                    echo "⚠️  Could not extract PR number from commit message"
                   fi
                 fi
                 
                 if [ -z "$BRANCH_TYPE" ]; then
-                  BRANCH_TYPE="unknown"
-                  echo "⚠️  Warning: Could not determine source branch type"
-                fi
-                
-                case "$BRANCH_TYPE" in
+                  # Could not determine branch type - create build version
+                  echo "⚠️  Could not determine source branch type"
+                  echo ""
+                  echo "📝 Commit message: $MERGE_COMMIT_MSG"
+                  if [ -n "$PR_NUMBER" ]; then
+                    echo "🔍 PR number detected: #${PR_NUMBER}"
+                    echo "❌ Possible causes:"
+                    echo "   1. Workflow lacks 'pull-requests: read' permission"
+                    echo "   2. Source branch was deleted before workflow ran"
+                    echo "   3. PR information not accessible"
+                  fi
+                  echo ""
+                  echo "⚠️  Creating build version"
+                  VERSION="${BASE_VERSION}+${SHORT_SHA}"
+                  TAG=""
+                  IS_RELEASE="false"
+                else
+                  case "$BRANCH_TYPE" in
                   alpha)
                     # Merged from alpha = MAJOR bump automatically
                     NEXT_MAJOR=$((MAJOR + 1))
@@ -191,15 +315,21 @@ jobs:
                     TAG="v${VERSION}"
                     ;;
                   feature)
-                    # Merged from feature = MINOR bump
-                    NEXT_MINOR=$((MINOR + 1))
-                    VERSION="${MAJOR}.${NEXT_MINOR}.0-beta"
-                    TAG="v${VERSION}"
-                    ;;
-                  bugfix)
-                    # Merged from bugfix during beta = increment build metadata
-                    if [[ "$BASE_VERSION" =~ -beta ]]; then
-                      # Extract existing build number if present
+                    # Merged from feature = MINOR bump (unless in major alpha/beta)
+                    # Check if we're in major alpha release (VERSION = X.0.0-alpha)
+                    if [[ "$BASE_VERSION" =~ ^[0-9]+\.0\.0-alpha ]]; then
+                      # Major alpha: increment build metadata
+                      if [[ "$BASE_VERSION" =~ \.([0-9]+)$ ]]; then
+                        CURRENT_BUILD="${BASH_REMATCH[1]}"
+                        NEXT_BUILD=$((CURRENT_BUILD + 1))
+                      else
+                        NEXT_BUILD="1"
+                      fi
+                      VERSION="${MAJOR}.${MINOR}.${PATCH}-alpha.${NEXT_BUILD}"
+                      TAG="v${VERSION}"
+                    # Check if we're in major beta release (VERSION = X.0.0-beta)
+                    elif [[ "$BASE_VERSION" =~ ^[0-9]+\.0\.0-beta ]]; then
+                      # Major beta: increment build metadata
                       if [[ "$BASE_VERSION" =~ \.([0-9]+)$ ]]; then
                         CURRENT_BUILD="${BASH_REMATCH[1]}"
                         NEXT_BUILD=$((CURRENT_BUILD + 1))
@@ -208,6 +338,46 @@ jobs:
                       fi
                       VERSION="${MAJOR}.${MINOR}.${PATCH}-beta.${NEXT_BUILD}"
                       TAG="v${VERSION}"
+                    else
+                      # Regular beta or no beta: MINOR bump
+                      NEXT_MINOR=$((MINOR + 1))
+                      VERSION="${MAJOR}.${NEXT_MINOR}.0-beta"
+                      TAG="v${VERSION}"
+                    fi
+                    ;;
+                  bugfix)
+                    # Merged from bugfix = PATCH bump or .N increment during major alpha/beta
+                    # Check if we're in major alpha release (VERSION = X.0.0-alpha)
+                    if [[ "$BASE_VERSION" =~ ^[0-9]+\.0\.0-alpha ]]; then
+                      # Major alpha: increment build metadata
+                      if [[ "$BASE_VERSION" =~ \.([0-9]+)$ ]]; then
+                        CURRENT_BUILD="${BASH_REMATCH[1]}"
+                        NEXT_BUILD=$((CURRENT_BUILD + 1))
+                      else
+                        NEXT_BUILD="1"
+                      fi
+                      VERSION="${MAJOR}.${MINOR}.${PATCH}-alpha.${NEXT_BUILD}"
+                      TAG="v${VERSION}"
+                    # Check if we're in major beta release (VERSION = X.0.0-beta)
+                    elif [[ "$BASE_VERSION" =~ ^[0-9]+\.0\.0-beta ]]; then
+                      # Major beta: increment build metadata
+                      if [[ "$BASE_VERSION" =~ \.([0-9]+)$ ]]; then
+                        CURRENT_BUILD="${BASH_REMATCH[1]}"
+                        NEXT_BUILD=$((CURRENT_BUILD + 1))
+                      else
+                        NEXT_BUILD="1"
+                      fi
+                      VERSION="${MAJOR}.${MINOR}.${PATCH}-beta.${NEXT_BUILD}"
+                      TAG="v${VERSION}"
+                    elif [[ "$BASE_VERSION" =~ -beta ]]; then
+                      # Regular beta (not major): PATCH bump with -beta suffix
+                      NEXT_PATCH=$((PATCH + 1))
+                      VERSION="${MAJOR}.${MINOR}.${NEXT_PATCH}-beta"
+                      TAG="v${VERSION}"
+                    elif [[ "$BASE_VERSION" =~ -alpha ]]; then
+                      # Regular beta (not major): PATCH bump with -beta suffix
+                      NEXT_PATCH=$((PATCH + 1))
+                      VERSION="${MAJOR}.${MINOR}.${NEXT_PATCH}-beta"
                     elif [[ "$BASE_VERSION" =~ -alpha ]]; then
                       # Extract existing build number if present
                       if [[ "$BASE_VERSION" =~ \.([0-9]+)$ ]]; then
@@ -236,8 +406,9 @@ jobs:
                     VERSION="${MAJOR}.${MINOR}.${PATCH}-beta"
                     TAG="v${VERSION}"
                     ;;
-                esac
-                IS_RELEASE="false"
+                  esac
+                  IS_RELEASE="false"
+                fi
               fi
               ;;
             alpha)
@@ -254,21 +425,14 @@ jobs:
               IS_RELEASE="false"
               ;;
             feature/*)
-              # Feature branch: vX.Y.Z+SHA (current VERSION from main)
+              # Feature branch: vX.Y.Z+SHA (current VERSION from main, for all pushes and PRs)
               VERSION="${MAJOR}.${MINOR}.${PATCH}+${SHORT_SHA}"
               TAG=""
               IS_RELEASE="false"
               ;;
             bugfix/*)
-              if [ "${{ github.event_name }}" = "pull_request" ]; then
-                # PR from bugfix: vX.Y.Z-bugfix.N
-                BUGFIX_COUNT=$(git tag -l "v${MAJOR}.${MINOR}.${PATCH}-bugfix.*" | wc -l)
-                BUGFIX_NUM=$((BUGFIX_COUNT + 1))
-                VERSION="${MAJOR}.${MINOR}.${PATCH}-bugfix.${BUGFIX_NUM}"
-              else
-                # Bugfix branch push: vX.Y.Z+SHA
-                VERSION="${MAJOR}.${MINOR}.${PATCH}+${SHORT_SHA}"
-              fi
+              # Bugfix branch: vX.Y.Z+SHA (current VERSION from main, for all pushes and PRs)
+              VERSION="${MAJOR}.${MINOR}.${PATCH}+${SHORT_SHA}"
               TAG=""
               IS_RELEASE="false"
               ;;
@@ -511,6 +675,7 @@ jobs:
           fi
       
       - name: Update VERSION file
+        id: update_version
         if: steps.check_merge.outputs.is_merge == 'true'
         run: |
           CALCULATED_VERSION="${{ needs.version.outputs.version }}"
@@ -546,8 +711,27 @@ jobs:
             git push origin ${{ github.ref_name }}
             
             echo "✅ VERSION updated from ${CURRENT_VERSION} to ${NEW_VERSION}"
+            echo "version_updated=true" >> $GITHUB_OUTPUT
           else
             echo "ℹ️  VERSION unchanged (${CURRENT_VERSION})"
+            echo "version_updated=false" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Create Git tag
+        if: steps.check_merge.outputs.is_merge == 'true' && github.ref_name == 'main' && steps.update_version.outputs.version_updated == 'true'
+        run: |
+          TAG="${{ needs.version.outputs.tag }}"
+          if [ -n "$TAG" ]; then
+            # Pull the latest commit (the VERSION update) to ensure tag points to it
+            git pull origin ${{ github.ref_name }}
+            
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git tag -a "$TAG" -m "Pre-release $TAG"
+            git push origin "$TAG"
+            echo "✅ Created and pushed tag: $TAG (on VERSION update commit)"
+          else
+            echo "ℹ️  No tag to create"
           fi
 
   # Summary
@@ -574,11 +758,13 @@ jobs:
   sync_branches:
     name: Sync Branches with Main
     runs-on: ubuntu-latest
-    needs: [version, build]
+    needs: [version, build, update-version]
     if: |
       github.ref_name == 'main' && 
       github.event_name == 'push' &&
       !contains(github.event.head_commit.message, '[skip ci]')
+    permissions:
+      contents: write  # Required to create and push beta branch
     
     steps:
       - name: Checkout code
@@ -617,16 +803,17 @@ jobs:
           # Check if beta branch exists
           if ! git ls-remote --heads origin beta | grep -q beta; then
             # Check if VERSION has -alpha suffix (indicating alpha was just merged)
-            if [ -f VERSION ]; then
-              VERSION_CONTENT=$(cat VERSION)
-              if [[ "$VERSION_CONTENT" =~ -alpha ]]; then
-                echo "🌿 Creating beta branch from main (alpha was just merged)"
-                git checkout -b beta
-                git push origin beta
-                echo "✅ Beta branch created successfully"
-              else
-                echo "ℹ️  No -alpha suffix in VERSION, beta branch not needed yet"
-              fi
+            # Use the calculated version from the version job, not the VERSION file
+            CALCULATED_VERSION="${{ needs.version.outputs.version }}"
+            echo "📋 Calculated version from workflow: $CALCULATED_VERSION"
+            
+            if [[ "$CALCULATED_VERSION" =~ -alpha ]]; then
+              echo "🌿 Creating beta branch from main (alpha was just merged)"
+              git checkout -b beta
+              git push origin beta
+              echo "✅ Beta branch created successfully"
+            else
+              echo "ℹ️  No -alpha suffix in calculated version, beta branch not needed yet"
             fi
           else
             echo "ℹ️  Beta branch already exists"
