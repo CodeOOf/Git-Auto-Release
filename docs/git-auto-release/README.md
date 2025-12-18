@@ -1,73 +1,38 @@
+
+
+📖 **Navigation**: [Quick Start](QUICKSTART.md) | [Setup Guide](SETUP_GUIDE.md) | [Reference Guide](REFERENCE_GUIDE.md) | [Branch Strategy](BRANCH_STRATEGY.md) | [Customization](CUSTOMIZATION.md) | [Project Structure](PROJECT_STRUCTURE.md)
+
 # Git Auto Release - Documentation
 
-> **Template Documentation**: This folder contains all Git-Auto-Release documentation. When adopting this template, you can keep, archive, or delete this folder.
+## Table of Contents
 
-Complete documentation for setting up and using automated Git versioning and releases.
-
-> **❓ Have questions?** Check the [FAQ in Reference Guide](REFERENCE_GUIDE.md#frequently-asked-questions)
-
----
-
-## 📚 Documentation Index
-
-### Getting Started
-- **[Quick Start Guide](QUICKSTART.md)** - Get up and running in 10 minutes
-- **[Setup Guide](SETUP_GUIDE.md)** - Complete installation and configuration
-- **[Reference Guide](REFERENCE_GUIDE.md)** - Comprehensive reference with daily workflow commands and version cheat sheet (for established projects)
-  - **[FAQ](REFERENCE_GUIDE.md#frequently-asked-questions)** - Common questions and troubleshooting
-
-### Core Concepts
-- **[Branch Strategy](BRANCH_STRATEGY.md)** - Detailed branching model and workflows
-- **[Workflow Examples](WORKFLOW_EXAMPLES.md)** - Real-world usage scenarios
-
-### Customization
-- **[Customization Guide](CUSTOMIZATION.md)** - Adapting the template to your needs (GitLab CI, Jenkins, etc.)
-- **[Project Structure](PROJECT_STRUCTURE.md)** - Understanding the repository layout
-
-### Visual References
-> **Note**: Visual diagrams are integrated throughout the documentation for contextual learning:
-> - **Branch diagrams** in [Branch Strategy](BRANCH_STRATEGY.md)
-> - **Workflow flowcharts** in [Workflow Examples](WORKFLOW_EXAMPLES.md)
-> - **CI/CD architecture** in [Setup Guide](SETUP_GUIDE.md)
-> - **Quick decision tree** in [Reference Guide](REFERENCE_GUIDE.md) (for daily usage)
+1. [Getting Started](#getting-started)
+2. [Core Concepts](#core-concepts)
+3. [Customization](#customization)
+4. [Visual References](#visual-references)
+5. [Key Concepts](#key-concepts)
 
 ---
 
-## 🔑 Key Concepts
+Welcome to the documentation for Git-Auto-Release, a template for automated semantic versioning and release management using GitHub Actions (or any CI/CD platform).
 
-### Semantic Versioning
+**Quick Links:**
+- **[Quick Start Guide](QUICKSTART.md)** – Get up and running fast
+- **[Setup Guide](SETUP_GUIDE.md)** – Full installation and configuration
+- **[Reference Guide](REFERENCE_GUIDE.md)** – Daily usage, commands, and FAQ
+- **[Branch Strategy](BRANCH_STRATEGY.md)** – Branching model details
+- **[Customization Guide](CUSTOMIZATION.md)** – Adapting to your CI/CD
+- **[Project Structure](PROJECT_STRUCTURE.md)** – File and folder overview
 
-Git-Auto-Release follows [Semantic Versioning 2.0.0](https://semver.org/):
+---
 
-- **MAJOR** (X.0.0) - Breaking changes (via `alpha`/`beta` branches)
-- **MINOR** (0.X.0) - New features, backwards-compatible (via `feature/*` branches)
-- **PATCH** (0.0.X) - Bug fixes (via `bugfix/*` or `hotfix` branches)
+## 🔑 Key Concepts (Summary)
 
-**Pre-release tags:**
-- `-alpha` - Early breaking changes development
-- `-beta` - Feature complete, testing phase
-- `-rc.N` - Release candidate (during main → release PR)
+- **Semantic Versioning**: MAJOR (breaking), MINOR (features), PATCH (fixes). See [Reference Guide](REFERENCE_GUIDE.md#key-features).
+- **Branch Model**: Parallel development, PRs to `main`, releases from `main` to `release`. See [Branch Strategy](BRANCH_STRATEGY.md).
+- **CI/CD Automation**: Version bumping, tagging, and changelogs are fully automated.
 
-**Build metadata:**
-- `+SHA` - Commit hash for development builds
-- `.N` - Build iteration during beta testing (e.g., `v1.0.0-beta.1`, `.2`, `.3`)
-
-### Branch Model
-
-```
-release (production) ← Tags: v1.0.0, v1.0.1, etc.
-  ↑
-main (staging) ← Tags: v1.0.0-beta, v0.2.0-beta
-  ↑ ↑ ↑ ↑ ↑
-  │ │ │ │ └─ hotfix (PATCH, from release)
-  │ │ │ └─── bugfix/* (PATCH, from main)
-  │ │ └───── feature/* (MINOR, from main)
-  │ └─────── beta (MAJOR testing, from main)
-  └───────── alpha (MAJOR, from main)
-
-All development branches branch FROM and merge TO main
-(except hotfix which is from/to release)
-```
+For details, see the linked guides above.
 
 ### Automated Version Bumping
 

@@ -1,15 +1,9 @@
+
+📖 **Navigation**: [README](README.md) | [Quickstart](QUICKSTART.md) | [FAQ](FAQ.md) | **Reference Guide**
+
 # Reference Guide
 
-📖 **Navigation**: [← README](README.md) | [Quickstart](QUICKSTART.md) | **Reference Guide**
-
-**A comprehensive reference guide for Git-Auto-Release - fully automated semantic versioning and release management.**
-
-> **🎯 For initial setup**, see [QUICKSTART.md](QUICKSTART.md)  
-> **This guide is for daily usage** after Git-Auto-Release is established in your project.
-
----
-
-## 📑 Table of Contents
+## Table of Contents
 
 - [What Is This?](#-what-is-this)
 - [What You Get (Template Files)](#-what-you-get-template-files)
@@ -25,8 +19,17 @@
 - [Common Use Cases](#-common-use-cases)
 - [Customization Points](#️-customization-points)
 - [Pro Tips](#-pro-tips)
-- [FAQ](#frequently-asked-questions)
+- [FAQ](FAQ.md)
 - [License & Support](#-license--support)
+
+---
+
+📖 **Navigation**: [← README](README.md) | [Quickstart](QUICKSTART.md) | **Reference Guide**
+
+**A comprehensive reference guide for Git-Auto-Release - fully automated semantic versioning and release management.**
+
+> **🎯 For initial setup**, see [QUICKSTART.md](QUICKSTART.md)  
+> **This guide is for daily usage** after Git-Auto-Release is established in your project.
 
 ---
 
@@ -523,154 +526,6 @@ cargo test
 | `VERSION` | Current semantic version | Never manually (auto-updated by CI) |
 | `.github/workflows/ci-cd-versioned.yml` | CI/CD automation | When customizing workflow |
 | `BRANCH_STRATEGY.md` | Branch rules and flows | Reference only |
-| `README.md` | Project overview | Update for your project |
-
-> **⚠️ Warning**: Never manually edit `VERSION` file unless fixing a CI issue. The workflow manages it automatically.
-
----
-
-## 🔗 Documentation Links
-
-### Getting Started
-- 🚀 [Quickstart](QUICKSTART.md) - Initial setup (5 minutes)
-- 📘 [Setup Guide](SETUP_GUIDE.md) - Detailed configuration
-
-### Daily Usage  
-- ⚡ **Reference Guide** (this page) - Comprehensive reference
-- 📖 [Workflow Examples](WORKFLOW_EXAMPLES.md) - Step-by-step scenarios
-- 🌳 [Branch Strategy](BRANCH_STRATEGY.md) - Branch rules and flows
-
-### Advanced
-- 🎨 [Customization Guide](CUSTOMIZATION.md) - Adapt to your needs
-- 📂 [Project Structure](PROJECT_STRUCTURE.md) - File organization
-
----
-
-## 🎯 Common Use Cases
-
-Perfect for:
-- ✅ **SaaS applications**: Clear staging → production promotion path
-- ✅ **Open source projects**: Transparent and predictable releases
-- ✅ **Enterprise software**: Controlled, auditable version control
-- ✅ **Microservices**: Consistent versioning across services
-- ✅ **APIs**: Breaking changes clearly marked with MAJOR bumps
-- ✅ **Libraries**: Semantic versioning for package dependents
-
----
-
-## 🛠️ Customization Points
-
-### Easy Customizations
-- Change placeholder build/test commands for your language
-- Remove Docker examples if not needed
-- Adjust branch protection rules
-- Modify release notes format
-
-### Advanced Customizations
-- Adapt workflow for GitLab CI, Bitbucket Pipelines, Jenkins
-- Change version bump logic
-- Add deployment steps
-- Integrate with external tools
-
-See [CUSTOMIZATION.md](CUSTOMIZATION.md) for platform-specific guides.
-
----
-
-## 💡 Pro Tips
-
-1. **Commit Often**: Small, focused commits are easier to review and revert
-2. **Branch Names**: Use descriptive names like `feature/user-authentication` not `feature/fix`
-3. **PR Descriptions**: Link related issues with `Closes #123` or `Fixes #456`
-4. **Review Tags**: Check tags regularly with `git fetch --tags && git tag -l`
-5. **Test Locally**: Always run tests before pushing with `npm test` or equivalent
-6. **Clean Branches**: Delete merged branches to keep repo tidy
-7. **Read CI Logs**: When workflow fails, read the logs - they're usually clear about what's wrong
-
----
-
-## ❓ Frequently Asked Questions
-
-### How do I fix "VERSION file has conflicts"?
-
-Always choose the higher version number:
-```bash
-git checkout --theirs VERSION
-git add VERSION
-git commit
-```
-
-### Can I manually edit the VERSION file?
-
-**No**, unless you're fixing a CI issue. The workflow automatically manages VERSION after every merge. Manual edits will be overwritten.
-
-### What if I accidentally merged to the wrong branch?
-
-1. Revert the merge commit:
-   ```bash
-   git revert -m 1 <merge-commit-hash>
-   git push
-   ```
-2. Create PR to the correct branch
-3. Delete any incorrect tags if created
-
-### How do I skip CI for a commit?
-
-Add `[skip ci]` or `[ci skip]` to your commit message:
-```bash
-git commit -m "docs: update README [skip ci]"
-```
-
-### Why is my PR showing the wrong version?
-
-Check your branch name matches the pattern:
-- `feature/*` → MINOR bump
-- `bugfix/*` → PATCH bump
-- `alpha` → MAJOR bump
-- `hotfix` → PATCH bump (from release)
-
-### Can I use this with monorepos?
-
-Yes, but requires customization. See [CUSTOMIZATION.md](CUSTOMIZATION.md) for monorepo configuration examples.
-
-### How do I change the version bump logic?
-
-Edit `.github/workflows/ci-cd-versioned.yml` in the version calculation job. See [CUSTOMIZATION.md](CUSTOMIZATION.md) for details.
-
-### What if I need to release multiple features together?
-
-Merge all feature branches to `main` first (each gets a beta tag), then when ready, merge `main` → `release` for one production release.
-
-### My feature became a breaking change mid-development. What do I do?
-
-If you realize your feature branch will introduce breaking changes:
-
-1. **Create alpha branch** (if it doesn't exist):
-   ```bash
-   git checkout main
-   git checkout -b alpha
-   git push -u origin alpha
-   ```
-
-2. **Merge your feature branch into alpha**:
-   ```bash
-   git checkout alpha
-   git merge feature/your-feature
-   # Or create PR: feature/your-feature → alpha
-   ```
-
-3. **Continue development on alpha**:
-   ```bash
-   git checkout alpha
-   # Make more changes
-   git commit -m "feat!: breaking change description"
-   git push origin alpha
-   ```
-
-4. **When ready, merge alpha → main** for v1.0.0-alpha tag
-
-**Note**: Use `feat!:` in commit messages to mark breaking changes clearly for changelog generation.
-
-### Can I use squash merges?
 
 Yes! The workflow detects both regular merges (2 parents) and squash merges (PR# in commit message).
 
@@ -743,7 +598,10 @@ Yes, edit the workflow's tag creation step. Default is `v{VERSION}` (e.g., v1.0.
    git merge feature/your-breaking-change  # Add more breaking changes if needed
    git commit -m "feat!: incorporate additional breaking changes"
    git push origin alpha
-   
+
+---
+
+If you encounter issues or have questions, check the [FAQ](FAQ.md) for solutions and guidance.
    # When ready, restart the major release process:
    # Create PR: alpha → main (will create v1.0.0-alpha, update VERSION to 1.0.0-alpha, and create beta branch)
    ```
@@ -788,34 +646,8 @@ Yes, edit the workflow's tag creation step. Default is `v{VERSION}` (e.g., v1.0.
 
 ---
 
-## 📄 License & Support
-
-### License
-
-This template is released under the **MIT License** - see [LICENSE](LICENSE) for full text.
-
-You are free to:
-- ✅ Use this template for commercial or personal projects
-- ✅ Modify and adapt to your needs  
-- ✅ Distribute and share
-
-**Your project built with this template can use any license you choose.**
-
-### Support & Contributing
-
-**Contributions welcome!** See [CONTRIBUTING.md](../../CONTRIBUTING.md) for guidelines.
-
-**Need help?**
-- 📖 Documentation: Complete guides in [docs/git-auto-release/](.)
-- 🐛 Issues: [GitHub Issues](https://github.com/CodeOOf/Git-Auto-Release/issues)
-- 💬 Discussions: [GitHub Discussions](https://github.com/CodeOOf/Git-Auto-Release/discussions)
-
----
+For more tips and answers to common questions, visit the [FAQ](FAQ.md).
 
 **📌 Bookmark this page for daily reference!**
 
 **⏱️ Setup Time**: ~5 minutes | **🔄 Maintenance**: Zero - fully automated! | **💪 Production Ready**: Use immediately!
-
-
-
-

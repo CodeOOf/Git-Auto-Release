@@ -1,10 +1,19 @@
+
+📖 **Navigation**: [README](README.md) | **Quick Start** | [Setup Guide →](SETUP_GUIDE.md)
+
 # 🚀 Quick Start - Git Auto Release
 
-📖 **Navigation**: [← README](README.md) | **Quick Start** | [Setup Guide →](SETUP_GUIDE.md)
+## Table of Contents
 
-Get automated versioning running in **under 5 minutes**!
+1. [Step 1: Get the Template](#step-1-get-the-template-1-min)
+2. [Step 2: Configure Your Repo](#step-2-configure-your-repo-1-min)
+3. [Step 3: Set Up CI/CD](#step-3-set-up-cicd-2-min)
+4. [Step 4: Try a Release](#step-4-try-a-release-1-min)
+5. [FAQ](#faq)
 
 ---
+
+Get automated versioning running in **under 5 minutes**! For full details, see the [Setup Guide](SETUP_GUIDE.md).
 
 ## Step 1: Get the Template (1 min)
 
@@ -169,3 +178,12 @@ Use structured commit messages for clarity:
 
 **⏱️ Time to First Tag**: ~5 minutes  
 **🔄 Maintenance**: Zero - fully automated! ✨
+---
+
+## Table of Contents
+
+1. [Step 1: Get the Template](#step-1-get-the-template-1-min)
+2. [Step 2: Configure Your Repo](#step-2-configure-your-repo-1-min)
+3. [Step 3: Set Up CI/CD](#step-3-set-up-cicd-2-min)
+4. [Step 4: Try a Release](#step-4-try-a-release-1-min)
+5. [FAQ](#faq)

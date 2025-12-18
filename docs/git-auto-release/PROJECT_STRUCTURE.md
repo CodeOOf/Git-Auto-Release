@@ -1,4 +1,18 @@
+
+📖 **Navigation**: [README](README.md) | [Branch Strategy](BRANCH_STRATEGY.md) | [Customization](CUSTOMIZATION.md) | [Quickstart](QUICKSTART.md) | [Reference Guide](REFERENCE_GUIDE.md)
+
 # Git-Auto-Release Project Structure
+
+## Table of Contents
+
+1. [Project Structure](#git-auto-release-project-structure)
+2. [File Descriptions](#file-descriptions)
+3. [Root Files](#root-files)
+4. [Github Workflows](#githubworkflows)
+5. [Docs Folder](#docs-folder)
+6. [Checklist and Contributing](#checklist-and-contributing)
+
+---
 
 ```
 Git-Auto-Release/
@@ -340,16 +354,3 @@ README.md (overview)
 
 ---
 
-## Quick Navigation
-
-- **Getting Started**: [README.md](../../README.md) - Main overview
-- **Documentation Index**: [docs/git-auto-release/README.md](README.md)
-- **Fast Setup**: [QUICKSTART.md](QUICKSTART.md) - 5 minute setup
-- **Daily Usage**: [REFERENCE_GUIDE.md](REFERENCE_GUIDE.md) - Comprehensive reference + FAQ
-- **Branch Strategy**: [BRANCH_STRATEGY.md](BRANCH_STRATEGY.md) - Detailed branching model
-- **Detailed Setup**: [SETUP_GUIDE.md](SETUP_GUIDE.md) - Full configuration
-- **Customization**: [CUSTOMIZATION.md](CUSTOMIZATION.md) - Advanced topics
-
----
-
-**This structure is designed for clarity and ease of use. Everything has its place!** 📁

@@ -1,4 +1,22 @@
+
+📖 **Navigation**: [README](../README.md) | [Quick Start](../QUICKSTART.md) | [Setup Guide](SETUP_GUIDE.md) | **Workflow Examples** | [Branch Strategy →](../BRANCH_STRATEGY.md)
+
 # Workflow Examples
+
+## Table of Contents
+
+1. [Version Flow Diagrams](#-version-flow-diagrams)
+2. [Feature Development](#1-feature-development)
+3. [Bug Fixes](#2-bug-fixes)
+4. [Beta Testing with Bugfixes](#3-beta-testing-with-bugfixes)
+5. [Major Release (Breaking Changes)](#4-major-release-breaking-changes)
+6. [Minor Release (New Features)](#5-minor-release-new-features)
+7. [Patch Release (Bug Fixes)](#6-patch-release-bug-fixes)
+8. [Hotfix (Production Emergency)](#7-hotfix-production-emergency)
+9. [Multiple Features in Parallel](#8-multiple-features-in-parallel)
+10. [Release Rollback](#9-release-rollback)
+
+---
 
 📖 **Navigation**: [← README](../README.md) | [Quick Start](../QUICKSTART.md) | [Setup Guide](SETUP_GUIDE.md) | **Workflow Examples** | [Branch Strategy →](../BRANCH_STRATEGY.md)
 
@@ -651,3 +669,17 @@ sequenceDiagram
 ---
 
 **Need more examples?** Check the [FAQ](../README.md#-faq) or open an issue!
+---
+
+## Table of Contents
+
+1. [Version Flow Diagrams](#-version-flow-diagrams)
+2. [Feature Development](#1-feature-development)
+3. [Bug Fixes](#2-bug-fixes)
+4. [Beta Testing with Bugfixes](#3-beta-testing-with-bugfixes)
+5. [Major Release (Breaking Changes)](#4-major-release-breaking-changes)
+6. [Minor Release (New Features)](#5-minor-release-new-features)
+7. [Patch Release (Bug Fixes)](#6-patch-release-bug-fixes)
+8. [Hotfix (Production Emergency)](#7-hotfix-production-emergency)
+9. [Multiple Features in Parallel](#8-multiple-features-in-parallel)
+10. [Release Rollback](#9-release-rollback)

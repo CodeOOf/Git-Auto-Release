@@ -1,10 +1,7 @@
+
+📖 **Navigation**: [README](README.md) | [Branch Strategy](BRANCH_STRATEGY.md) | [Workflow Examples](WORKFLOW_EXAMPLES.md) | **Customization Guide** | [Reference Guide →](REFERENCE_GUIDE.md)
+
 # Customization Guide
-
-📖 **Navigation**: [← README](README.md) | [Branch Strategy](BRANCH_STRATEGY.md) | [Workflow Examples](WORKFLOW_EXAMPLES.md) | **Customization Guide** | [Reference Guide →](REFERENCE_GUIDE.md)
-
-Learn how to adapt the Git-Auto-Release template to different CI/CD platforms and customize the automation pipeline.
-
----
 
 ## Table of Contents
 
@@ -24,9 +21,9 @@ Learn how to adapt the Git-Auto-Release template to different CI/CD platforms an
 
 ---
 
----
+📖 **Navigation**: [← README](README.md) | [Branch Strategy](BRANCH_STRATEGY.md) | [Workflow Examples](WORKFLOW_EXAMPLES.md) | **Customization Guide** | [Reference Guide →](REFERENCE_GUIDE.md)
 
-## Platform Adaptation
+Learn how to adapt the Git-Auto-Release template to different CI/CD platforms and customize the automation pipeline.
 
 The Git-Auto-Release template uses **GitHub Actions** as the reference implementation. The core concepts can be adapted to any CI/CD platform by implementing the same versioning logic.
 
@@ -562,7 +559,6 @@ stages:
                 SOURCE_BRANCH=$(echo "$(Build.SourceBranch)" | sed 's|refs/heads/||')
               fi
               
-              # Remove pre-release suffixes
               MAJOR=$(echo $MAJOR | sed 's/[^0-9]//g')
               MINOR=$(echo $MINOR | sed 's/[^0-9]//g')
               PATCH=$(echo $PATCH | sed 's/[^0-9]//g')
@@ -580,7 +576,6 @@ stages:
                   VERSION="${MAJOR}.${MINOR}.${PATCH}-beta"
                   TAG="v${MAJOR}.${MINOR}.${PATCH}-beta"
                   ;;
-                feature/*)
                   NEXT_MINOR=$((MINOR + 1))
                   VERSION="${MAJOR}.${NEXT_MINOR}.0-beta"
                   TAG="v${MAJOR}.${NEXT_MINOR}.0-beta"
@@ -611,7 +606,6 @@ stages:
               echo "Tag: $TAG"
             name: calcVersion
             displayName: 'Calculate Version'
-  
   - stage: Build
     displayName: 'Build'
     dependsOn: CalculateVersion
@@ -1365,3 +1359,12 @@ permissions:
 ---
 
 **Need help with customization?** Open an issue with your use case!
+---
+
+## Table of Contents
+
+1. [Platform Adaptation](#platform-adaptation)
+2. [Customizing GitHub Actions Workflow](#customizing-github-actions-workflow)
+3. [Version Calculation Logic](#version-calculation-logic)
+4. [Release Configuration](#release-configuration)
+5. [Branch Strategy Adjustments](#branch-strategy-adjustments)

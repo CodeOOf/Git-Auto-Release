@@ -1,10 +1,22 @@
+
+📖 **Navigation**: [README](README.md) | [Quick Start](QUICKSTART.md) | [Setup Guide](docs/SETUP_GUIDE.md) | [Workflow Examples](docs/WORKFLOW_EXAMPLES.md) | **Branch Strategy**
+
 # Git Branch Strategy
 
+## Table of Contents
+
+1. [Current Version](#current-version)
+2. [Branch Hierarchy Overview](#-branch-hierarchy-overview)
+3. [Branch Structure](#branch-structure)
+4. [Branch Types](#branch-types)
+5. [Release Flows](#release-flows)
+6. [Automated Versioning](#automated-versioning)
+7. [Build Versions by Branch](#build-versions-by-branch)
+8. [FAQ](#faq)
+
+---
+
 📖 **Navigation**: [← README](README.md) | [Quick Start](QUICKSTART.md) | [Setup Guide](docs/SETUP_GUIDE.md) | [Workflow Examples](docs/WORKFLOW_EXAMPLES.md) | **Branch Strategy**
-
-## Current Version
-
-See [VERSION](VERSION) file for the current base version. The CI/CD pipeline automatically calculates build versions based on branch type and commit. See [Automated Versioning](#automated-versioning) below.
 
 ---
 

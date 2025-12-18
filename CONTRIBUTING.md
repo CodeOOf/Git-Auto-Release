@@ -1,3 +1,19 @@
+
+
+
+
+# Contributing to Git Auto Release
+
+Thank you for your interest! We welcome:
+
+- Bug reports and feature requests (open an issue)
+- Pull requests for code, docs, or workflow improvements
+
+---
+
+## Testing Requirement
+
+**Before submitting a merge request (pull request) to `main` from your fork, you must follow and complete the steps in [TESTING_PLAN.md](./TESTING_PLAN.md) to verify all core functionality and workflows. This ensures your contribution is reliable and meets project standards.**
 # Contributing to Git Auto Release
 
 📖 **Navigation**: [← README](README.md) | **Contributing**
@@ -100,15 +116,7 @@ Types:
 
 ### Test Workflow Changes
 
-1. Create a test repository
-2. Copy your modified workflow
-3. Test all scenarios:
-   - Feature branches
-   - Bugfix branches
-   - Major releases
-   - Hotfixes
-4. Verify version calculations are correct
-5. Check tag creation works
+Before submitting workflow changes, thoroughly test them using a private test repository. See the [Testing Guide](#testing-guide) below for detailed instructions.
 
 ### Test Documentation Changes
 
@@ -119,35 +127,140 @@ Types:
 
 ---
 
-## Areas That Need Help
+## Testing Guide
 
-- **More language examples**: Go, Rust, Java, etc.
-- **Deployment examples**: AWS, Azure, GCP, Kubernetes
-- **CI/CD alternatives**: GitLab CI, Jenkins, CircleCI
-- **Documentation improvements**: Clearer explanations, more diagrams
-- **Bug fixes**: Issues reported by users
-- **Testing**: More comprehensive test scenarios
+### Setting Up a Test Repository
+
+To safely test workflow changes without affecting the main repository, create a private test repository from this template:
+
+#### 1. Create Test Repository from Template
+
+```bash
+# Option A: Using GitHub CLI
+gh repo create your-username/test-git-auto-release --template CodeOOf/Git-Auto-Release --private --clone
+
+# Option B: Via GitHub Web UI
+# 1. Go to https://github.com/CodeOOf/Git-Auto-Release
+# 2. Click "Use this template" → "Create a new repository"
+# 3. Name it "test-git-auto-release"
+# 4. Set visibility to "Private"
+# 5. Click "Create repository"
+# 6. Clone your new repository locally
+```
+
+#### 2. Initialize Test Repository
+
+```bash
+cd test-git-auto-release
+
+# Set initial VERSION
+echo "0.1.0" > VERSION
+
+# Commit and push
+git add VERSION
+git commit -m "chore: initialize VERSION file"
+git push origin main
+
+# Set up branch protection for main (optional but recommended)
+# Go to Settings → Branches → Add branch protection rule
+# - Require pull request reviews before merging
+# - Require status checks to pass before merging
+```
+
+#### 3. Copy Your Modified Workflows
+
+If you're testing workflow changes from your development branch:
+
+```bash
+# Copy modified workflow from your dev branch
+cp /path/to/Git-Auto-Release/.github/workflows/ci-cd-versioned.yml .github/workflows/
+
+# Commit and push
+git add .github/workflows/ci-cd-versioned.yml
+git commit -m "test: update workflow for testing"
+git push origin main
+```
 
 ---
 
-## Questions?
+### Comprehensive Test Scenarios
 
-- Open an issue for discussion
-- Check existing issues and PRs
-- Read the documentation thoroughly
+Follow these test scenarios in order to verify all functionality. Each scenario includes expected results.
+
+#### Test 1: Feature Branch (Normal Development)
+
+**Scenario**: Add a new feature during normal development
+
+```bash
+# Starting VERSION: 0.1.0
+
+# Create feature branch
+git checkout main
+git pull origin main
+git checkout -b feature/test-feature
+
+# Make changes
+echo "# Feature Test" > feature.md
+git add feature.md
+git commit -m "feat: add test feature"
+git push origin feature/test-feature
+```
+
+**Expected Results**:
+- ✅ Push to `feature/test-feature`: Version shows `v0.1.0+<SHA>` (build version)
+- ✅ Create PR to main: Version shows `v0.1.0+<SHA>` (build version)
+- ✅ Merge PR: 
+  - VERSION file updates to `0.2.0-beta`
+  - Creates tag `v0.2.0-beta` (after VERSION commit)
+
+
+# Contributing to Git Auto Release
+
+Thank you for your interest! We welcome:
+
+- Bug reports and feature requests (open an issue)
+- Pull requests for code, docs, or workflow improvements
+
+---
+
+## How to Contribute
+
+1. **Fork and clone** this repo
+2. **Create a branch**: `feature/your-feature` or `bugfix/your-fix`
+3. **Make your changes** (code, docs, or workflows)
+4. **Follow commit style**: `type(scope): message` (e.g. `feat(ci): add new job`)
+5. **Open a PR to `main`**
+6. Respond to feedback and update as needed
+
+---
+
+## PR & Commit Guidelines
+
+- Use clear, conventional commit messages: `feat:`, `fix:`, `docs:`, `chore:`, etc.
+- Keep PRs focused and well-described
+- Update docs/tests if you change functionality
+
+---
+
+## Branch & Workflow Rules
+
+- All changes go through PRs to `main` (no direct commits)
+- Use `feature/*`, `bugfix/*`, `hotfix`, `alpha`, `beta`, `release` as appropriate
+- The automation will handle version bumps and tags
 
 ---
 
 ## Code of Conduct
 
-Be respectful, constructive, and welcoming. We're all here to learn and improve!
+Be respectful, constructive, and welcoming.
 
 ---
 
 ## License
 
-By contributing, you agree that your contributions will be licensed under the MIT License.
+By contributing, you agree your work is MIT licensed.
 
 ---
 
-**Thank you for helping make Git-Auto-Release better! 🚀**
+**Thanks for making Git-Auto-Release better! 🚀**
+- ✅ Push to `alpha`: Version shows `v0.2.1-beta+<SHA>` (build version)

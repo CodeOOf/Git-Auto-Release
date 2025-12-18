@@ -1,14 +1,7 @@
+
+📖 **Navigation**: [README](README.md) | [Quick Start](QUICKSTART.md) | **Setup Guide** | [Workflow Examples →](WORKFLOW_EXAMPLES.md)
+
 # Setup Guide
-
-📖 **Navigation**: [← README](README.md) | [Quick Start](QUICKSTART.md) | **Setup Guide** | [Workflow Examples →](WORKFLOW_EXAMPLES.md)
-
-**Detailed configuration guide for Git Auto Release.**
-
-> 💡 **Just want to get started?** See [Quick Start Guide](QUICKSTART.md) for a 5-minute setup.
-
-This guide provides in-depth setup instructions, advanced configuration options, and platform-specific customizations.
-
----
 
 ## Table of Contents
 
@@ -21,6 +14,8 @@ This guide provides in-depth setup instructions, advanced configuration options,
 7. [Troubleshooting](#7-troubleshooting)
 
 ---
+
+This guide provides in-depth setup instructions, advanced configuration, and platform-specific customizations for Git-Auto-Release. For a quick overview, see the [Quick Start Guide](QUICKSTART.md).
 
 ## 1. Prerequisites
 
@@ -87,7 +82,6 @@ rm README.md CONTRIBUTING.md
 mv README.template.md README.md
 mv CONTRIBUTING.template.md CONTRIBUTING.md
 
-# Edit README.md and CONTRIBUTING.md with your project details
 
 # Initialize Git
 git init
@@ -98,28 +92,7 @@ git commit -m "chore: initialize project from Git-Auto-Release template"
 # Add remote and push
 git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO.git
 git push -u origin main
-
-# Create release branch
-git checkout -b release
-git push -u origin release
-git checkout main
 ```
-
-### Customize Your Project Files
-
-After setup, edit these files:
-
-**README.md:**
-- Project name and description
-- Installation instructions
-- Usage examples
-- Link to template docs: `docs/git-auto-release/`
-
-**CONTRIBUTING.md:**
-- Contribution guidelines
-- Code of conduct
-- Development setup
-- Commit message conventions
 
 ---
 
